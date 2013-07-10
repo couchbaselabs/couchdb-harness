@@ -10,14 +10,14 @@ var spawn   = require('child_process').spawn
 module.exports = {
 
   run: function (port, tests, callback) {
-    
+
     // The couchjs binary file will fail if the server.uri file doesn't
     // have a linebreak at the end.
     var addr = 'http://127.0.0.1:' + (port || 5984) + '/\n'
       , files;
 
     tests = (!!tests && tests.length)
-      ? tests.map(function (test) { 
+      ? tests.map(function (test) {
           return 'script/test/' + test + '.js';
         })
       : glob.sync('script/test/*.js', { cwd: cwd });
@@ -36,8 +36,8 @@ module.exports = {
       return path.resolve(cwd, fp);
     });
 
-    fs.writeFile(uri, addr, { encoding: 'utf8' }, function (err) {
-      if (err) throw err;
+    // fs.writeFile(uri, addr, { encoding: 'utf8' }, function (err) {
+      // if (err) throw err;
       var tests = spawn(couchjs, ['-H', '-u', uri].concat(files));
 
       tests.stdout.on('data', function (data) {
@@ -51,7 +51,7 @@ module.exports = {
       tests.on('exit', function (code) {
         callback.call(null, code);
       });
-    });
+    // });
 
   }
 
