@@ -1,6 +1,10 @@
 # CouchDB Harness
 
->A generalized port of the CouchDB JavaScript test harness.
+>A generalized port of the CouchDB JavaScript test harness. 
+
+Only a handful of tests are working on Couchbase Lite right now:
+
+* `all_docs`, `changes`, and `bulk_docs`
 
 ## Install (you don't need to git clone it)
 
