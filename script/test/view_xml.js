@@ -24,16 +24,16 @@ couchTests.view_xml = function(debug) {
     "  var xml = new XML(doc.content);\n" +
     "  emit(xml.title.text().toXMLString(), null);\n" +
     "}");
-  T(results.total_rows == 2);
-  T(results.rows[0].key == "Testing E4X");
-  T(results.rows[1].key == "Testing XML");
+  TEquals(2, results.total_rows)
+  TEquals("Testing E4X", results.rows[0].key)
+  TEquals("Testing XML", results.rows[1].key)
 
   var results = db.query(
     "function(doc) {\n" +
     "  var xml = new XML(doc.content);\n" +
     "  emit(xml.title.@id.toXMLString(), null);\n" +
     "}");
-  T(results.total_rows == 2);
-  T(results.rows[0].key == "e4x");
-  T(results.rows[1].key == "xml");
+  TEquals(2, results.total_rows)
+  TEquals("e4x", results.rows[0].key)
+  TEquals("xml", results.rows[1].key)
 };

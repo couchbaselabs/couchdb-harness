@@ -26,7 +26,7 @@ couchTests.basics = function(debug) {
 
   // PUT on existing DB should return 412 instead of 500
   xhr = CouchDB.request("PUT", "/test_suite_db/");
-  T(xhr.status == 412);
+  TEquals(412, xhr.status)
   if (debug) debugger;
 
   // creating a new DB should return Location header
@@ -44,14 +44,14 @@ couchTests.basics = function(debug) {
   });
 
   // Get the database info, check the db_name
-  T(db.info().db_name == "test_suite_db");
+  TEquals("test_suite_db", db.info().db_name)
 
   T(CouchDB.allDbs().some(function (db) {
     return /test_suite_db/.test(db);
   }));
 
   // Get the database info, check the doc_count
-  T(db.info().doc_count == 0);
+  TEquals(0, db.info().doc_count)
 
   // create a document and save it to the database
   var doc = {_id:"0",a:1,b:1};
@@ -69,13 +69,13 @@ couchTests.basics = function(debug) {
 
   // make sure the revs_info status is good
   var doc = db.open(id, {revs_info:true});
-  T(doc._revs_info[0].status == "available");
+  TEquals("available", doc._revs_info[0].status)
 
   // make sure you can do a seq=true option
 
   // TODO: 
   // var doc = db.open(id, {local_seq:true});
-  // T(doc._local_seq == 1);
+  // TEquals(1, doc._local_seq)
 
 
   // Create some more documents.
@@ -85,7 +85,7 @@ couchTests.basics = function(debug) {
   T(db.save({_id:"3",a:4,b:16}).ok);
 
   // Check the database doc count
-  T(db.info().doc_count == 4);
+  TEquals(4, db.info().doc_count)
 
   // COUCHDB-954
   var oldRev = db.save({_id:"COUCHDB-954", a:1}).rev;
@@ -93,7 +93,7 @@ couchTests.basics = function(debug) {
 
   // test behavior of open_revs with explicit revision list
   var result = db.open("COUCHDB-954", {open_revs:[oldRev,newRev]});
-  T(result.length == 2, "should get two revisions back");
+  TEquals(2, result.length, "should get two revisions back");
   T(result[0].ok);
   T(result[1].ok);
 
@@ -138,7 +138,7 @@ couchTests.basics = function(debug) {
   results = db.query(mapFunction);
 
   // the modified document should now be in the results.
-  T(results.total_rows == 2);
+  TEquals(2, results.total_rows)
 
   // write 2 more documents
   T(db.save({a:3,b:9}).ok);
@@ -147,10 +147,10 @@ couchTests.basics = function(debug) {
   results = db.query(mapFunction);
 
   // 1 more document should now be in the result.
-  T(results.total_rows == 3);
+  TEquals(3, results.total_rows)
 
   // TODO: This probably fails because a previous test is commented out.
-  // T(db.info().doc_count == 6);
+  // TEquals(6, db.info().doc_count)
 
   var reduceFunction = function(keys, values){
     return sum(values);
@@ -158,20 +158,20 @@ couchTests.basics = function(debug) {
 
   results = db.query(mapFunction, reduceFunction);
 
-  T(results.rows[0].value == 33);
+  TEquals(33, results.rows[0].value)
 
   // delete a document
   T(db.deleteDoc(existingDoc).ok);
 
   // make sure we can't open the doc
-  T(db.open(existingDoc._id) == null);
+  TIsnull(db.open(existingDoc._id))
 
   results = db.query(mapFunction);
 
   // 1 less document should now be in the results.
-  T(results.total_rows == 2);
+  TEquals(2, results.total_rows)
   // TODO: This probably fails because a previous test is commented out.
-  // T(db.info().doc_count == 5);
+  // TEquals(5, db.info().doc_count)
 
   // make sure we can still open
   T(db.open(existingDoc._id, {rev: existingDoc._rev}) != null);
@@ -189,7 +189,7 @@ couchTests.basics = function(debug) {
 
   // deleting a non-existent doc should be 404
   xhr = CouchDB.request("DELETE", "/test_suite_db/doc-does-not-exist");
-  T(xhr.status == 404);
+  TEquals(404, xhr.status)
 
   // TODO: https://github.com/daleharvey/pouchdb/issues/600
   // Check for invalid document members
@@ -202,17 +202,17 @@ couchTests.basics = function(debug) {
   // var test_doc = function(info) {
   // var data = JSON.stringify(info[1]);
   //   xhr = CouchDB.request("PUT", "/test_suite_db/" + info[0], {body: data});
-  //   T(xhr.status == 500);
+  //   TEquals(500, xhr.status)
   //   result = JSON.parse(xhr.responseText);
-  //   T(result.error == "doc_validation");
+  //   TEquals("doc_validation", result.error)
 
   //   xhr = CouchDB.request("POST", "/test_suite_db/", {
   //     headers: {"Content-Type": "application/json"},
   //     body: data
   //   });
-  //   T(xhr.status == 500);
+  //   TEquals(500, xhr.status)
   //   result = JSON.parse(xhr.responseText);
-  //   T(result.error == "doc_validation");
+  //   TEquals("doc_validation", result.error)
   // };
   // bad_docs.forEach(test_doc);
 
@@ -221,29 +221,29 @@ couchTests.basics = function(debug) {
   // TODO: https://github.com/daleharvey/pouchdb/issues/676
   // PUT body not an object
   // xhr = CouchDB.request("PUT", "/test_suite_db/bar", {body: "[]"});
-  // T(xhr.status == 400);
+  // TEquals(400, xhr.status)
   // result = JSON.parse(xhr.responseText);
-  // T(result.error == "bad_request");
-  // T(result.reason == "Document must be a JSON object");
+  // TEquals("bad_request", result.error)
+  // TEquals("Document must be a JSON object", result.reason)
 
   // Body of a _bulk_docs is not an object
   xhr = CouchDB.request("POST", "/test_suite_db/_bulk_docs", {body: "[]"});
-  T(xhr.status == 400);
+  TEquals(400, xhr.status)
   result = JSON.parse(xhr.responseText);
-  T(result.error == "bad_request");
+  TEquals("bad_request", result.error)
 
   // Body of an _all_docs  multi-get is not a {"key": [...]} structure.
   xhr = CouchDB.request("POST", "/test_suite_db/_all_docs", {body: "[]"});
-  T(xhr.status == 400);
-  T(result.error == "bad_request");
+  TEquals(400, xhr.status)
+  TEquals("bad_request", result.error)
 
   // TODO: https://github.com/daleharvey/pouchdb/issues/600 - pouch.leveldb.js#550
   // var data = "{\"keys\": 1}";
   // xhr = CouchDB.request("POST", "/test_suite_db/_all_docs", {body:data});
-  // T(xhr.status == 400);
+  // TEquals(400, xhr.status)
   // result = JSON.parse(xhr.responseText);
-  // T(result.error == "bad_request");
-  // T(result.reason == "`keys` member must be a array.");
+  // TEquals("bad_request", result.error)
+  // TEquals("`keys` member must be a array.", result.reason)
 
   // On restart, a request for creating a database that already exists can
   // not override the existing database file

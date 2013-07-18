@@ -30,12 +30,12 @@ couchTests.utf8 = function(debug) {
   }
 
   for (var i=0; i<texts.length; i++) {
-    T(db.open(i.toString()).text == texts[i]);
+    TEquals(texts[i], db.open(i.toString()).text)
   }
 
   // check that views and key collation don't blow up
   var rows = db.query(function(doc) { emit(null, doc.text) }).rows;
   for (var i=0; i<texts.length; i++) {
-    T(rows[i].value == texts[i]);
+    TEquals(texts[i], rows[i].value)
   }
 };

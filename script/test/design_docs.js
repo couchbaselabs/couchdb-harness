@@ -207,7 +207,7 @@ couchTests.design_docs = function(debug) {
 
     // test that editing a show fun on the ddoc results in a change in output
     xhr = CouchDB.request("GET", "/test_suite_db/_design/test/_show/simple");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     TEquals(xhr.responseText, "ok");
 
     designDoc.shows.simple = (function() {
@@ -216,22 +216,22 @@ couchTests.design_docs = function(debug) {
     T(db.save(designDoc).ok);
 
     xhr = CouchDB.request("GET", "/test_suite_db/_design/test/_show/simple");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     TEquals(xhr.responseText, "ko");
 
     xhr = CouchDB.request(
       "GET", "/test_suite_db_a/_design/test/_show/simple?cache=buster"
     );
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     TEquals("ok", xhr.responseText, 'query server used wrong ddoc');
 
     // test commonjs require
     xhr = CouchDB.request("GET", "/test_suite_db/_design/test/_show/requirey");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     TEquals("PLANKTONwhatever/commonjs/upperplankton", xhr.responseText);
 
     xhr = CouchDB.request("GET", "/test_suite_db/_design/test/_show/circular");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     TEquals("javascript", JSON.parse(xhr.responseText).language);
 
     // test circular commonjs dependencies
@@ -340,20 +340,20 @@ couchTests.design_docs = function(debug) {
 
     // test commonjs in map functions
     resp = db.view("test/commonjs", {limit:1});
-    T(resp.rows[0].value == 'ok');
+    TEquals('ok', resp.rows[0].value)
 
     // test that the _all_docs view returns correctly with keys
     var results = db.allDocs({startkey:"_design", endkey:"_design0"});
-    T(results.rows.length == 1);
+    TEquals(1, results.rows.length)
 
     for (i = 0; i < 2; i++) {
       var rows = db.view("test/all_docs_twice").rows;
       for (var j = 0; j < numDocs; j++) {
-        T(rows[2 * j].key == (j + 1));
-        T(rows[(2 * j) + 1].key == (j + 1));
+        TEquals((j + 1), rows[2 * j].key)
+        TEquals((j + 1), rows[(2 * j) + 1].key)
       };
-      T(db.view("test/no_docs").total_rows == 0);
-      T(db.view("test/single_doc").total_rows == 1);
+      TEquals(0, db.view("test/no_docs").total_rows)
+      TEquals(1, db.view("test/single_doc").total_rows)
       T(db.ensureFullCommit().ok);
       restartServer();
     };
@@ -375,45 +375,45 @@ couchTests.design_docs = function(debug) {
     };
 
     T(db.save(designDoc2).ok);
-    T(db.view("test2/single_doc").total_rows == 1);
+    TEquals(1, db.view("test2/single_doc").total_rows)
 
     var summate = function(N) {
       return (N + 1) * (N / 2);
     };
     var result = db.view("test/summate");
-    T(result.rows[0].value == summate(numDocs * 2));
+    TEquals(summate(numDocs * 2), result.rows[0].value)
 
     result = db.view("test/summate", {startkey: 4, endkey: 4});
-    T(result.rows[0].value == 4);
+    TEquals(4, result.rows[0].value)
 
     result = db.view("test/summate", {startkey: 4, endkey: 5});
-    T(result.rows[0].value == 9);
+    TEquals(9, result.rows[0].value)
 
     result = db.view("test/summate", {startkey: 4, endkey: 6});
-    T(result.rows[0].value == 15);
+    TEquals(15, result.rows[0].value)
 
     // test start_key and end_key aliases
     result = db.view("test/summate", {start_key: 4, end_key: 6});
-    T(result.rows[0].value == 15);
+    TEquals(15, result.rows[0].value)
 
     // Verify that a shared index (view def is an exact copy of "summate")
     // does not confuse the reduce stage
     result = db.view("test/summate2", {startkey: 4, endkey: 6});
-    T(result.rows[0].value == 15);
+    TEquals(15, result.rows[0].value)
 
     for(i = 1; i < (numDocs / 2); i += 30) {
       result = db.view("test/summate", {startkey: i, endkey: (numDocs - i)});
-      T(result.rows[0].value == summate(numDocs - i) - summate(i - 1));
+      TEquals(summate(numDocs - i) - summate(i - 1), result.rows[0].value)
     }
 
     T(db.deleteDoc(designDoc).ok);
-    T(db.open(designDoc._id) == null);
-    T(db.view("test/no_docs") == null);
+    TIsnull(db.open(designDoc._id))
+    TIsnull(db.view("test/no_docs"))
 
     T(db.ensureFullCommit().ok);
     restartServer();
-    T(db.open(designDoc._id) == null);
-    T(db.view("test/no_docs") == null);
+    TIsnull(db.open(designDoc._id))
+    TIsnull(db.view("test/no_docs"))
 
     // trigger ddoc cleanup
     T(db.viewCleanup().ok);
@@ -446,7 +446,7 @@ couchTests.design_docs = function(debug) {
   }
 
   var doc = db.open("doc1");
-  TEquals(null, doc);
+  TIsnull(doc);
   ddoc._deleted = true;
   TEquals(true, db.save(ddoc).ok);
 

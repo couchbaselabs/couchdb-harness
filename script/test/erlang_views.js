@@ -37,16 +37,16 @@ couchTests.erlang_views = function(debug) {
       // emitting a key value that is undefined should result in that row not
       // being included in the view results
       var results = db.query(mfun, null, null, null, "erlang");
-      T(results.total_rows == 1);
-      T(results.rows[0].key == 1);
-      T(results.rows[0].value == "str1");
+      TEquals(1, results.total_rows)
+      TEquals(1, results.rows[0].key)
+      TEquals("str1", results.rows[0].value)
       
       // check simple reduction - another doc with same key.
       var doc = {_id: "2", integer: 1, string: "str2"};
       T(db.save(doc).ok);
       rfun = "fun(Keys, Values, ReReduce) -> length(Values) end.";
       results = db.query(mfun, rfun, null, null, "erlang");
-      T(results.rows[0].value == 2);
+      TEquals(2, results.rows[0].value)
 
       // simple 'list' tests
       var designDoc = {
@@ -87,12 +87,12 @@ couchTests.erlang_views = function(debug) {
       var url = "/test_suite_db/_design/erlview/_show/simple/1";
       var xhr = CouchDB.request("GET", url);
       T(xhr.status == 200, "standard get should be 200");
-      T(xhr.responseText == "0 - GET");
+      TEquals("0 - GET", xhr.responseText)
 
       var url = "/test_suite_db/_design/erlview/_list/simple_list/simple_view";
       var xhr = CouchDB.request("GET", url);
       T(xhr.status == 200, "standard get should be 200");
-      T(xhr.responseText == "head2tail");
+      TEquals("head2tail", xhr.responseText)
 
       // Larger dataset
 

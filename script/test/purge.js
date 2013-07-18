@@ -39,10 +39,10 @@ couchTests.purge = function(debug) {
   // go ahead and validate the views before purging
   var rows = db.view("test/all_docs_twice").rows;
   for (var i = 0; i < numDocs; i++) {
-    T(rows[2*i].key == i+1);
-    T(rows[(2*i)+1].key == i+1);
+    TEquals(i+1, rows[2*i].key)
+    TEquals(i+1, rows[(2*i)+1].key)
   }
-  T(db.view("test/single_doc").total_rows == 1);
+  TEquals(1, db.view("test/single_doc").total_rows)
 
   var info = db.info();
   var doc1 = db.open("1");
@@ -52,37 +52,37 @@ couchTests.purge = function(debug) {
   var xhr = CouchDB.request("POST", "/test_suite_db/_purge", {
     body: JSON.stringify({"1":[doc1._rev], "2":[doc2._rev]})
   });
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
 
   var result = JSON.parse(xhr.responseText);
   var newInfo = db.info();
   
   // purging increments the update sequence
-  T(info.update_seq+1 == newInfo.update_seq);
+  TEquals(newInfo.update_seq, info.update_seq+1)
   // and it increments the purge_seq
-  T(info.purge_seq+1 == newInfo.purge_seq);
-  T(result.purge_seq == newInfo.purge_seq);
+  TEquals(newInfo.purge_seq, info.purge_seq+1)
+  TEquals(newInfo.purge_seq, result.purge_seq)
 
-  T(result.purged["1"][0] == doc1._rev);
-  T(result.purged["2"][0] == doc2._rev);
+  TEquals(doc1._rev, result.purged["1"][0])
+  TEquals(doc2._rev, result.purged["2"][0])
 
-  T(db.open("1") == null);
-  T(db.open("2") == null);
+  TIsnull(db.open("1"))
+  TIsnull(db.open("2"))
 
   var rows = db.view("test/all_docs_twice").rows;
   for (var i = 2; i < numDocs; i++) {
-    T(rows[2*(i-2)].key == i+1);
-    T(rows[(2*(i-2))+1].key == i+1);
+    TEquals(i+1, rows[2*(i-2)].key)
+    TEquals(i+1, rows[(2*(i-2))+1].key)
   }
-  T(db.view("test/single_doc").total_rows == 0);
+  TEquals(0, db.view("test/single_doc").total_rows)
 
   // purge sequences are preserved after compaction (COUCHDB-1021)
   T(db.compact().ok);
-  T(db.last_req.status == 202);
+  TEquals(202, db.last_req.status)
   // compaction isn't instantaneous, loop until done
   while (db.info().compact_running) {};
   var compactInfo = db.info();
-  T(compactInfo.purge_seq == newInfo.purge_seq);
+  TEquals(newInfo.purge_seq, compactInfo.purge_seq)
 
   // purge documents twice in a row without loading views
   // (causes full view rebuilds)
@@ -94,22 +94,22 @@ couchTests.purge = function(debug) {
     body: JSON.stringify({"3":[doc3._rev]})
   });
 
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
 
   xhr = CouchDB.request("POST", "/test_suite_db/_purge", {
     body: JSON.stringify({"4":[doc4._rev]})
   });
 
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
   result = JSON.parse(xhr.responseText);
-  T(result.purge_seq == db.info().purge_seq);
+  TEquals(db.info().purge_seq, result.purge_seq)
 
   var rows = db.view("test/all_docs_twice").rows;
   for (var i = 4; i < numDocs; i++) {
-    T(rows[2*(i-4)].key == i+1);
-    T(rows[(2*(i-4))+1].key == i+1);
+    TEquals(i+1, rows[2*(i-4)].key)
+    TEquals(i+1, rows[(2*(i-4))+1].key)
   }
-  T(db.view("test/single_doc").total_rows == 0);
+  TEquals(0, db.view("test/single_doc").total_rows)
 
   // COUCHDB-1065
   var dbA = new CouchDB("test_suite_db_a");

@@ -38,39 +38,39 @@ couchTests.reduce_builtin = function(debug) {
   };
 
   var result = db.query(map, "_sum");
-  T(result.rows[0].value == 2*summate(numDocs));
+  TEquals(2*summate(numDocs), result.rows[0].value)
   result = db.query(map, "_count");
-  T(result.rows[0].value == 1000);
+  TEquals(1000, result.rows[0].value)
   result = db.query(map, "_stats");
-  T(result.rows[0].value.sum == 2*summate(numDocs));
-  T(result.rows[0].value.count == 1000);
-  T(result.rows[0].value.min == 1);
-  T(result.rows[0].value.max == 500);
-  T(result.rows[0].value.sumsqr == 2*sumsqr(numDocs));
+  TEquals(2*summate(numDocs), result.rows[0].value.sum)
+  TEquals(1000, result.rows[0].value.count)
+  TEquals(1, result.rows[0].value.min)
+  TEquals(500, result.rows[0].value.max)
+  TEquals(2*sumsqr(numDocs), result.rows[0].value.sumsqr)
 
   result = db.query(map, "_sum", {startkey: 4, endkey: 4});
-  T(result.rows[0].value == 8);
+  TEquals(8, result.rows[0].value)
   result = db.query(map, "_count", {startkey: 4, endkey: 4});
-  T(result.rows[0].value == 2);
+  TEquals(2, result.rows[0].value)
 
   result = db.query(map, "_sum", {startkey: 4, endkey: 5});
-  T(result.rows[0].value == 18);
+  TEquals(18, result.rows[0].value)
   result = db.query(map, "_count", {startkey: 4, endkey: 5});
-  T(result.rows[0].value == 4);
+  TEquals(4, result.rows[0].value)
 
   result = db.query(map, "_sum", {startkey: 4, endkey: 6});
-  T(result.rows[0].value == 30);
+  TEquals(30, result.rows[0].value)
   result = db.query(map, "_count", {startkey: 4, endkey: 6});
-  T(result.rows[0].value == 6);
+  TEquals(6, result.rows[0].value)
 
   result = db.query(map, "_sum", {group:true, limit:3});
-  T(result.rows[0].value == 2);
-  T(result.rows[1].value == 4);
-  T(result.rows[2].value == 6);
+  TEquals(2, result.rows[0].value)
+  TEquals(4, result.rows[1].value)
+  TEquals(6, result.rows[2].value)
 
   for(var i=1; i<numDocs/2; i+=30) {
     result = db.query(map, "_sum", {startkey: i, endkey: numDocs - i});
-    T(result.rows[0].value == 2*(summate(numDocs-i) - summate(i-1)));
+    TEquals(2*(summate(numDocs-i) - summate(i-1)), result.rows[0].value)
   }
 
   // test for trailing characters after builtin functions, desired behaviour
@@ -82,15 +82,15 @@ couchTests.reduce_builtin = function(debug) {
 
   for(var i=0; i < trailing.length; i++) {
     result = db.query(map, "_sum" + trailing[i]);
-    T(result.rows[0].value == 2*summate(numDocs));
+    TEquals(2*summate(numDocs), result.rows[0].value)
     result = db.query(map, "_count" + trailing[i]);
-    T(result.rows[0].value == 1000);
+    TEquals(1000, result.rows[0].value)
     result = db.query(map, "_stats" + trailing[i]);
-    T(result.rows[0].value.sum == 2*summate(numDocs));
-    T(result.rows[0].value.count == 1000);
-    T(result.rows[0].value.min == 1);
-    T(result.rows[0].value.max == 500);
-    T(result.rows[0].value.sumsqr == 2*sumsqr(numDocs));
+    TEquals(2*summate(numDocs), result.rows[0].value.sum)
+    TEquals(1000, result.rows[0].value.count)
+    TEquals(1, result.rows[0].value.min)
+    TEquals(500, result.rows[0].value.max)
+    TEquals(2*sumsqr(numDocs), result.rows[0].value.sumsqr)
   }
 
   db.deleteDb();
@@ -113,7 +113,7 @@ couchTests.reduce_builtin = function(debug) {
       docs.push({keys:["d", "b"]});
       docs.push({keys:["d", "c"]});
       db.bulkSave(docs);
-      T(db.info().doc_count == ((i - 1) * 10 * 11) + ((j + 1) * 11));
+      TEquals(((i - 1) * 10 * 11) + ((j + 1) * 11), db.info().doc_count)
     }
 
     map = function (doc) { emit(doc.keys, 1); };

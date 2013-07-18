@@ -29,8 +29,8 @@ couchTests.invalid_docids = function(debug) {
 
   urls.forEach(function(u) {
     var res = db.request("PUT", u, {"body": "{}"});
-    T(res.status == 400);
-    T(JSON.parse(res.responseText).error == "bad_request");
+    TEquals(400, res.status)
+    TEquals("bad_request", JSON.parse(res.responseText).error)
   });
 
   //Test non-string
@@ -38,40 +38,40 @@ couchTests.invalid_docids = function(debug) {
     db.save({"_id": 1});
     T(1 == 0, "doc id must be string");
   } catch(e) {
-      T(db.last_req.status == 400);
-      T(e.error == "bad_request");
+      TEquals(400, db.last_req.status)
+      TEquals("bad_request", e.error)
   }
 
   // Via PUT with _id not in body.
   var res = res = db.request("PUT", "/test_suite_db/_other", {"body": "{}"});
-  T(res.status == 400);
-  T(JSON.parse(res.responseText).error == "bad_request");
+  TEquals(400, res.status)
+  TEquals("bad_request", JSON.parse(res.responseText).error)
 
   // Accidental POST to form handling code.
   res = db.request("POST", "/test_suite_db/_tmp_view", {"body": "{}"});
-  T(res.status == 400);
-  T(JSON.parse(res.responseText).error == "bad_request");
+  TEquals(400, res.status)
+  TEquals("bad_request", JSON.parse(res.responseText).error)
 
   // Test invalid _prefix
   try {
     db.save({"_id": "_invalid"});
     T(1 == 0, "doc id may not start with underscore");
   } catch(e) {
-      T(db.last_req.status == 400);
-      T(e.error == "bad_request");
+      TEquals(400, db.last_req.status)
+      TEquals("bad_request", e.error)
   }
 
   // Test _bulk_docs explicitly.
   var docs = [{"_id": "_design/foo"}, {"_id": "_local/bar"}];
   db.bulkSave(docs);
-  docs.forEach(function(d) {T(db.open(d._id)._id == d._id);});
+  docs.forEach(function(d) {TEquals(d._id, db.open(d._id)._id);});
 
   docs = [{"_id": "_invalid"}];
   try {
     db.bulkSave(docs);
     T(1 == 0, "doc id may not start with underscore, even in bulk docs");
   } catch(e) {
-      T(db.last_req.status == 400);
-      T(e.error == "bad_request");
+      TEquals(400, db.last_req.status)
+      TEquals("bad_request", e.error)
   }
 };

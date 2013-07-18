@@ -39,7 +39,7 @@ couchTests.recreate_doc = function(debug) {
     db.save({_id:"foo", _rev:firstRev, bar:1});
     T("no save conflict 1" && false); // we shouldn't hit here
   } catch (e) {
-    T(e.error == "conflict");
+    TEquals("conflict", e.error)
   }
   
   var binAttDoc = {
@@ -57,7 +57,7 @@ couchTests.recreate_doc = function(debug) {
     db.save(binAttDoc);
     T("no save conflict 2" && false); // we shouldn't hit here
   } catch (e) {
-    T(e.error == "conflict");
+    TEquals("conflict", e.error)
   }
 
 
@@ -66,7 +66,7 @@ couchTests.recreate_doc = function(debug) {
     db.save({_id:"foo", _rev:"1-asfafasdf", bar:1});
     T("no save conflict 3" && false); // we shouldn't hit here
   } catch (e) {
-    T(e.error == "conflict");
+    TEquals("conflict", e.error)
   }
   
   try {
@@ -75,7 +75,7 @@ couchTests.recreate_doc = function(debug) {
     db.save(binAttDoc);
     T("no save conflict 4" && false); // we shouldn't hit here
   } catch (e) {
-    T(e.error == "conflict");
+    TEquals("conflict", e.error)
   }
 
   db.deleteDb();

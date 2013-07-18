@@ -127,7 +127,7 @@ couchTests.oauth_users_db = function(debug) {
         message, accessor
       );
       data = JSON.parse(xhr.responseText);
-      TEquals(null, data.userCtx.name);
+      TIsnull(data.userCtx.name);
       TEquals(1, data.userCtx.roles.length);
       TEquals("_admin", data.userCtx.roles[0]);
       TEquals(true, data.info.authentication_handlers.indexOf("default") >= 0);

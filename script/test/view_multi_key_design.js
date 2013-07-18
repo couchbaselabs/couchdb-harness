@@ -40,10 +40,10 @@ couchTests.view_multi_key_design = function(debug) {
   // Test that missing keys work too
   var keys = [101,30,15,37,50];
   var reduce = db.view("test/summate",{group:true},keys).rows;
-  T(reduce.length == keys.length-1); // 101 is missing
+  TEquals(keys.length-1, reduce.length) // 101 is missing
   for(var i=0; i<reduce.length; i++) {
     T(keys.indexOf(reduce[i].key) != -1);
-    T(reduce[i].key == reduce[i].value);
+    TEquals(reduce[i].value, reduce[i].key)
   }
 
   // First, the goods:
@@ -51,33 +51,33 @@ couchTests.view_multi_key_design = function(debug) {
   var rows = db.view("test/all_docs",{},keys).rows;
   for(var i=0; i<rows.length; i++) {
     T(keys.indexOf(rows[i].key) != -1);
-    T(rows[i].key == rows[i].value);
+    TEquals(Number(rows[i].value), rows[i].key)
   }
 
   // with GET keys
   rows = db.view("test/all_docs",{keys:keys},null).rows;
   for(var i=0;i<rows.length; i++) {
     T(keys.indexOf(rows[i].key) != -1);
-    T(rows[i].key == rows[i].value);
+    TEquals(Number(rows[i].value), rows[i].key)
   }
 
   // with empty keys
   rows = db.view("test/all_docs",{keys:[]},null).rows;
-  T(rows.length == 0);
+  TEquals(0, rows.length)
 
   var reduce = db.view("test/summate",{group:true},keys).rows;
-  T(reduce.length == keys.length);
+  TEquals(keys.length, reduce.length)
   for(var i=0; i<reduce.length; i++) {
     T(keys.indexOf(reduce[i].key) != -1);
-    T(reduce[i].key == reduce[i].value);
+    TEquals(reduce[i].value, reduce[i].key)
   }
 
   // with GET keys
   reduce = db.view("test/summate",{group:true,keys:keys},null).rows;
-  T(reduce.length == keys.length);
+  TEquals(keys.length, reduce.length)
   for(var i=0; i<reduce.length; i++) {
     T(keys.indexOf(reduce[i].key) != -1);
-    T(reduce[i].key == reduce[i].value);
+    TEquals(reduce[i].value, reduce[i].key)
   }
 
   // Test that invalid parameter combinations get rejected
@@ -90,7 +90,7 @@ couchTests.view_multi_key_design = function(debug) {
           db.view("test/all_docs",badargs[i],keys);
           T(0==1);
       } catch (e) {
-          T(e.error == "query_parse_error");
+          TEquals("query_parse_error", e.error)
       }
 
       try {
@@ -105,116 +105,116 @@ couchTests.view_multi_key_design = function(debug) {
       db.view("test/summate",{},keys);
       T(0==1);
   } catch (e) {
-      T(e.error == "query_parse_error");
+      TEquals("query_parse_error", e.error)
   }
 
   try {
       db.view("test/summate",{keys:keys},null);
       T(0==1);
   } catch (e) {
-      T(e.error == "query_parse_error");
+      TEquals("query_parse_error", e.error)
   }
 
   // Test that a map & reduce containing func support keys when reduce=false
   var resp = db.view("test/summate", {reduce: false}, keys);
-  T(resp.rows.length == 5);
+  TEquals(5, resp.rows.length)
 
   resp = db.view("test/summate", {reduce: false, keys: keys}, null);
-  T(resp.rows.length == 5);
+  TEquals(5, resp.rows.length)
 
   // Check that limiting by startkey_docid and endkey_docid get applied
   // as expected.
   var curr = db.view("test/multi_emit", {startkey_docid: 21, endkey_docid: 23}, [0, 2]).rows;
   var exp_key = [ 0,  0,  0,  2,  2,  2] ;
   var exp_val = [21, 22, 23, 21, 22, 23] ;
-  T(curr.length == 6);
+  TEquals(6, curr.length)
   for( var i = 0 ; i < 6 ; i++)
   {
-      T(curr[i].key == exp_key[i]);
-      T(curr[i].value == exp_val[i]);
+      TEquals(exp_key[i], curr[i].key)
+      TEquals(exp_val[i], curr[i].value)
   }
 
   curr = db.view("test/multi_emit", {startkey_docid: 21, endkey_docid: 23, keys: [0, 2]}, null).rows;
-  T(curr.length == 6);
+  TEquals(6, curr.length)
   for( var i = 0 ; i < 6 ; i++)
   {
-      T(curr[i].key == exp_key[i]);
-      T(curr[i].value == exp_val[i]);
+      TEquals(exp_key[i], curr[i].key)
+      TEquals(exp_val[i], curr[i].value)
   }
 
   // Check limit works
   curr = db.view("test/all_docs", {limit: 1}, keys).rows;
-  T(curr.length == 1);
-  T(curr[0].key == 10);
+  TEquals(1, curr.length)
+  TEquals(10, curr[0].key)
 
   curr = db.view("test/all_docs", {limit: 1, keys: keys}, null).rows;
-  T(curr.length == 1);
-  T(curr[0].key == 10);
+  TEquals(1, curr.length)
+  TEquals(10, curr[0].key)
 
   // Check offset works
   curr = db.view("test/multi_emit", {skip: 1}, [0]).rows;
-  T(curr.length == 99);
-  T(curr[0].value == 1);
+  TEquals(99, curr.length)
+  TEquals(1, curr[0].value)
 
   curr = db.view("test/multi_emit", {skip: 1, keys: [0]}, null).rows;
-  T(curr.length == 99);
-  T(curr[0].value == 1);
+  TEquals(99, curr.length)
+  TEquals(1, curr[0].value)
 
   // Check that dir works
   curr = db.view("test/multi_emit", {descending: "true"}, [1]).rows;
-  T(curr.length == 100);
-  T(curr[0].value == 99);
-  T(curr[99].value == 0);
+  TEquals(100, curr.length)
+  TEquals(99, curr[0].value)
+  TEquals(0, curr[99].value)
 
   curr = db.view("test/multi_emit", {descending: "true", keys: [1]}, null).rows;
-  T(curr.length == 100);
-  T(curr[0].value == 99);
-  T(curr[99].value == 0);
+  TEquals(100, curr.length)
+  TEquals(99, curr[0].value)
+  TEquals(0, curr[99].value)
 
   // Check a couple combinations
   curr = db.view("test/multi_emit", {descending: "true", skip: 3, limit: 2}, [2]).rows;
   T(curr.length, 2);
-  T(curr[0].value == 96);
-  T(curr[1].value == 95);
+  TEquals(96, curr[0].value)
+  TEquals(95, curr[1].value)
 
   curr = db.view("test/multi_emit", {descending: "true", skip: 3, limit: 2, keys: [2]}, null).rows;
   T(curr.length, 2);
-  T(curr[0].value == 96);
-  T(curr[1].value == 95);
+  TEquals(96, curr[0].value)
+  TEquals(95, curr[1].value)
 
   curr = db.view("test/multi_emit", {skip: 2, limit: 3, startkey_docid: "13"}, [0]).rows;
-  T(curr.length == 3);
-  T(curr[0].value == 15);
-  T(curr[1].value == 16);
-  T(curr[2].value == 17);
+  TEquals(3, curr.length)
+  TEquals(15, curr[0].value)
+  TEquals(16, curr[1].value)
+  TEquals(17, curr[2].value)
 
   curr = db.view("test/multi_emit", {skip: 2, limit: 3, startkey_docid: "13", keys: [0]}, null).rows;
-  T(curr.length == 3);
-  T(curr[0].value == 15);
-  T(curr[1].value == 16);
-  T(curr[2].value == 17);
+  TEquals(3, curr.length)
+  TEquals(15, curr[0].value)
+  TEquals(16, curr[1].value)
+  TEquals(17, curr[2].value)
 
   curr = db.view("test/multi_emit",
           {skip: 1, limit: 5, startkey_docid: "25", endkey_docid: "27"}, [1]).rows;
-  T(curr.length == 2);
-  T(curr[0].value == 26);
-  T(curr[1].value == 27);
+  TEquals(2, curr.length)
+  TEquals(26, curr[0].value)
+  TEquals(27, curr[1].value)
 
   curr = db.view("test/multi_emit",
           {skip: 1, limit: 5, startkey_docid: "25", endkey_docid: "27", keys: [1]}, null).rows;
-  T(curr.length == 2);
-  T(curr[0].value == 26);
-  T(curr[1].value == 27);
+  TEquals(2, curr.length)
+  TEquals(26, curr[0].value)
+  TEquals(27, curr[1].value)
 
   curr = db.view("test/multi_emit",
           {skip: 1, limit: 5, startkey_docid: "28", endkey_docid: "26", descending: "true"}, [1]).rows;
-  T(curr.length == 2);
-  T(curr[0].value == 27);
-  T(curr[1].value == 26);
+  TEquals(2, curr.length)
+  TEquals(27, curr[0].value)
+  TEquals(26, curr[1].value)
 
   curr = db.view("test/multi_emit",
           {skip: 1, limit: 5, startkey_docid: "28", endkey_docid: "26", descending: "true", keys: [1]}, null).rows;
-  T(curr.length == 2);
-  T(curr[0].value == 27);
-  T(curr[1].value == 26);
+  TEquals(2, curr.length)
+  TEquals(27, curr[0].value)
+  TEquals(26, curr[1].value)
 };

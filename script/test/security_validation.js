@@ -55,15 +55,15 @@ couchTests.security_validation = function(debug) {
         wrongPasswordDb.save({foo:1,author:"Damien Katz"});
         T(false && "Can't get here. Should have thrown an error 1");
       } catch (e) {
-        T(e.error == "unauthorized");
-        T(wrongPasswordDb.last_req.status == 401);
+        TEquals("unauthorized", e.error)
+        TEquals(401, wrongPasswordDb.last_req.status)
       }
 
       // test force basic login
       var resp = wrongPasswordDb.request("GET", "/_session?basic=true");
       var err = JSON.parse(resp.responseText);
-      T(err.error == "unauthorized");
-      T(resp.status == 401);
+      TEquals("unauthorized", err.error)
+      TEquals(401, resp.status)
 
       // Create the design doc that will run custom validation code
       var designDoc = {
@@ -100,8 +100,8 @@ couchTests.security_validation = function(debug) {
         userDb.save(designDoc);
         T(false && "Can't get here. Should have thrown an error on design doc");
       } catch (e) {
-        T(e.error == "unauthorized");
-        T(userDb.last_req.status == 401);
+        TEquals("unauthorized", e.error)
+        TEquals(401, userDb.last_req.status)
       }
 
       // set user as the admin
@@ -119,14 +119,14 @@ couchTests.security_validation = function(debug) {
         user2Db.save(designDoc, {new_edits : false});
         T(false && "Can't get here. Should have thrown an error on design doc");
       } catch (e) {
-        T(e.error == "unauthorized");
-        T(user2Db.last_req.status == 401);
+        TEquals("unauthorized", e.error)
+        TEquals(401, user2Db.last_req.status)
       }
 
       // test the _session API
       var resp = userDb.request("GET", "/_session");
       var user = JSON.parse(resp.responseText).userCtx;
-      T(user.name == "Damien Katz");
+      TEquals("Damien Katz", user.name)
       // test that the roles are listed properly
       TEquals(user.roles, []);
 
@@ -142,12 +142,12 @@ couchTests.security_validation = function(debug) {
               userDb.save({foo:1});
               T(false && "Can't get here. Should have thrown an error 2");
           } catch (e) {
-              T(e.error == "forbidden");
-              T(userDb.last_req.status == 403);
+              TEquals("forbidden", e.error)
+              TEquals(403, userDb.last_req.status)
           }
           // compact.
           T(db.compact().ok);
-          T(db.last_req.status == 202);
+          TEquals(202, db.last_req.status)
           // compaction isn't instantaneous, loop until done
           while (db.info().compact_running) {};
       }
@@ -159,8 +159,8 @@ couchTests.security_validation = function(debug) {
         user2Db.save(doc);
         T(false && "Can't get here. Should have thrown an error 3");
       } catch (e) {
-        T(e.error == "unauthorized");
-        T(user2Db.last_req.status == 401);
+        TEquals("unauthorized", e.error)
+        TEquals(401, user2Db.last_req.status)
       }
 
       // Now have Damien change the author to Jan
@@ -178,14 +178,14 @@ couchTests.security_validation = function(debug) {
         userDb.deleteDoc(doc);
         T(false && "Can't get here. Should have thrown an error 4");
       } catch (e) {
-        T(e.error == "unauthorized");
-        T(userDb.last_req.status == 401);
+        TEquals("unauthorized", e.error)
+        TEquals(401, userDb.last_req.status)
       }
       
       // admin must save with author field unless admin override
       var resp = db.request("GET", "/_session");
       var user = JSON.parse(resp.responseText).userCtx;
-      T(user.name == null);
+      TIsnull(user.name)
       // test that we are admin
       TEquals(user.roles, ["_admin"]);
       
@@ -196,8 +196,8 @@ couchTests.security_validation = function(debug) {
         db.save(doc);
         T(false && "Can't get here. Should have thrown an error 3");
       } catch (e) {
-        T(e.error == "unauthorized");
-        T(db.last_req.status == 401);
+        TEquals("unauthorized", e.error)
+        TEquals(401, db.last_req.status)
       }
 
       // now turn on admin override
@@ -228,7 +228,7 @@ couchTests.security_validation = function(debug) {
       T(results[1].error == "forbidden")
 
       T(db.open("bahbah"));
-      T(db.open("fahfah") == null);
+      TIsnull(db.open("fahfah"))
 
 
       // now all or nothing with a failure
@@ -237,10 +237,10 @@ couchTests.security_validation = function(debug) {
       // Create the docs
       var results = db.bulkSave(docs, {all_or_nothing:true});
 
-      T(results.errors.length == 1);
-      T(results.errors[0].error == "forbidden");
-      T(db.open("booboo") == null);
-      T(db.open("foofoo") == null);
+      TEquals(1, results.errors.length)
+      TEquals("forbidden", results.errors[0].error)
+      TIsnull(db.open("booboo"))
+      TIsnull(db.open("foofoo"))
 
       // Now test replication
       var AuthHeaders = {"WWW-Authenticate": "X-Couch-Test-Auth Christopher Lenz:dog food"};
@@ -320,17 +320,17 @@ couchTests.security_validation = function(debug) {
 
         T(results.ok);
 
-        T(results.history[0].docs_written == 1);
-        T(results.history[0].doc_write_failures == 2);
+        TEquals(1, results.history[0].docs_written)
+        TEquals(2, results.history[0].doc_write_failures)
 
         // bad2 should not be on dbA
-        T(dbA.open("bad2") == null);
+        TIsnull(dbA.open("bad2"))
 
         // The edit to foo1 should not have replicated.
-        T(dbA.open("foo1").value == "a");
+        TEquals("a", dbA.open("foo1").value)
 
         // The edit to foo2 should have replicated.
-        T(dbA.open("foo2").value == "b");
+        TEquals("b", dbA.open("foo2").value)
       }
     });
 };

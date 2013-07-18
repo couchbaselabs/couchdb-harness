@@ -62,15 +62,15 @@ couchTests.config = function(debug) {
     body : JSON.stringify("bar"),
     headers: {"X-Couch-Persist": "false"}
   });
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
   xhr = CouchDB.request("GET", "/_config/test");
   config = JSON.parse(xhr.responseText);
-  T(config.foo == "bar");
+  TEquals("bar", config.foo)
 
   // you can get a single key
   xhr = CouchDB.request("GET", "/_config/test/foo");
   config = JSON.parse(xhr.responseText);
-  T(config == "bar");
+  TEquals("bar", config)
 
   // Non-term whitelist values allow further modification of the whitelist.
   xhr = CouchDB.request("PUT", "/_config/httpd/config_whitelist",{

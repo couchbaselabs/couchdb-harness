@@ -885,7 +885,7 @@ couchTests.replicator_db = function(debug) {
       var doc = docs1[i];
       var copy = dbB.open(doc._id);
 
-      TEquals(null, copy);
+      TIsnull(copy);
     }
 
     T(dbB.setSecObj({
@@ -1109,9 +1109,9 @@ couchTests.replicator_db = function(debug) {
     // replications rep1 and rep2 should have been stopped when the replicator
     // database was swapped
     copy = dbA_copy.open(new_doc._id);
-    TEquals(null, copy);
+    TIsnull(copy);
     copy = dbB_copy.open(new_doc._id);
-    TEquals(null, copy);
+    TIsnull(copy);
 
     xhr = CouchDB.request("PUT", "/_config/replicator/db",{
       body : JSON.stringify(repDb.name),
@@ -1134,7 +1134,7 @@ couchTests.replicator_db = function(debug) {
     T(copy !== null);
     TEquals(new_doc.value, copy.value);
     copy = dbC_copy.open(new_doc._id);
-    TEquals(null, copy);
+    TIsnull(copy);
   }
 
 

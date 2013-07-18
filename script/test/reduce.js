@@ -26,25 +26,25 @@ couchTests.reduce = function(debug) {
   };
   var reduce = function (keys, values) { return sum(values); };
   var result = db.query(map, reduce);
-  T(result.rows[0].value == 2*summate(numDocs));
+  TEquals(2*summate(numDocs), result.rows[0].value)
 
   result = db.query(map, reduce, {startkey: 4, endkey: 4});
-  T(result.rows[0].value == 8);
+  TEquals(8, result.rows[0].value)
 
   result = db.query(map, reduce, {startkey: 4, endkey: 5});
-  T(result.rows[0].value == 18);
+  TEquals(18, result.rows[0].value)
 
   result = db.query(map, reduce, {startkey: 4, endkey: 6});
-  T(result.rows[0].value == 30);
+  TEquals(30, result.rows[0].value)
 
   result = db.query(map, reduce, {group:true, limit:3});
-  T(result.rows[0].value == 2);
-  T(result.rows[1].value == 4);
-  T(result.rows[2].value == 6);
+  TEquals(2, result.rows[0].value)
+  TEquals(4, result.rows[1].value)
+  TEquals(6, result.rows[2].value)
 
   for(var i=1; i<numDocs/2; i+=30) {
     result = db.query(map, reduce, {startkey: i, endkey: numDocs - i});
-    T(result.rows[0].value == 2*(summate(numDocs-i) - summate(i-1)));
+    TEquals(2*(summate(numDocs-i) - summate(i-1)), result.rows[0].value)
   }
 
   db.deleteDb();
@@ -67,7 +67,7 @@ couchTests.reduce = function(debug) {
       docs.push({keys:["d", "b"]});
       docs.push({keys:["d", "c"]});
       db.bulkSave(docs);
-      T(db.info().doc_count == ((i - 1) * 10 * 11) + ((j + 1) * 11));
+      TEquals(((i - 1) * 10 * 11) + ((j + 1) * 11), db.info().doc_count)
     }
 
     map = function (doc) { emit(doc.keys, 1); };

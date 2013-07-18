@@ -43,7 +43,7 @@ couchTests.view_offsets = function(debug) {
 
   var check = function(startkey, offset) {
     var opts = {startkey: startkey, descending: true};
-    T(db.view("test/offset", opts).offset == offset);
+    TEquals(offset, db.view("test/offset", opts).offset)
   };
 
   [

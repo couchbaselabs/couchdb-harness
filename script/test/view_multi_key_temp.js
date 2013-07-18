@@ -26,15 +26,15 @@ couchTests.view_multi_key_temp = function(debug) {
   var rows = db.query(queryFun, null, {}, keys).rows;
   for(var i=0; i<rows.length; i++) {
     T(keys.indexOf(rows[i].key) != -1);
-    T(rows[i].key == rows[i].value);
+    TEquals(rows[i].value, rows[i].key)
   }
 
   var reduce = db.query(queryFun, reduceFun, {group:true}, keys).rows;
   for(var i=0; i<reduce.length; i++) {
     T(keys.indexOf(reduce[i].key) != -1);
-    T(reduce[i].key == reduce[i].value);
+    TEquals(reduce[i].value, reduce[i].key)
   }
 
   rows = db.query(queryFun, null, {}, []).rows;
-  T(rows.length == 0);
+  TEquals(0, rows.length)
 };

@@ -21,15 +21,15 @@ couchTests.rev_stemming = function(debug) {
 
   var newLimit = 5;
 
-  T(db.getDbProperty("_revs_limit") == 1000);
+  TEquals(1000, db.getDbProperty("_revs_limit"))
 
   // Make an invalid request to _revs_limit
   // Should return 400
   var xhr = CouchDB.request("PUT", "/test_suite_db/_revs_limit", {body:"\"foo\""});
-  T(xhr.status == 400);
+  TEquals(400, xhr.status)
   var result = JSON.parse(xhr.responseText);
-  T(result.error == "bad_request");
-  T(result.reason == "Rev limit has to be an integer");
+  TEquals("bad_request", result.error)
+  TEquals("Rev limit has to be an integer", result.reason)
 
   var doc = {_id:"foo",foo:0}
   for( var i=0; i < newLimit + 1; i++) {
@@ -37,14 +37,14 @@ couchTests.rev_stemming = function(debug) {
     T(db.save(doc).ok);
   }
   var doc0 = db.open("foo", {revs:true});
-  T(doc0._revisions.ids.length == newLimit + 1);
+  TEquals(newLimit + 1, doc0._revisions.ids.length)
 
   var docBar = {_id:"bar",foo:0}
   for( var i=0; i < newLimit + 1; i++) {
     docBar.foo++;
     T(db.save(docBar).ok);
   }
-  T(db.open("bar", {revs:true})._revisions.ids.length == newLimit + 1);
+  TEquals(newLimit + 1, db.open("bar", {revs:true})._revisions.ids.length)
 
   T(db.setDbProperty("_revs_limit", newLimit).ok);
 
@@ -53,14 +53,14 @@ couchTests.rev_stemming = function(debug) {
     T(db.save(doc).ok);
   }
   doc0 = db.open("foo", {revs:true});
-  T(doc0._revisions.ids.length == newLimit);
+  TEquals(newLimit, doc0._revisions.ids.length)
 
 
   // If you replicate after you make more edits than the limit, you'll
   // cause a spurious edit conflict.
   CouchDB.replicate("test_suite_db_a", "test_suite_db_b");
   var docB1 = dbB.open("foo",{conflicts:true})
-  T(docB1._conflicts == null);
+  TEquals(undefined, docB1._conflicts)
 
   for( var i=0; i < newLimit - 1; i++) {
     doc.foo++;
@@ -70,7 +70,7 @@ couchTests.rev_stemming = function(debug) {
   // one less edit than limit, no conflict
   CouchDB.replicate("test_suite_db_a", "test_suite_db_b");
   var docB1 = dbB.open("foo",{conflicts:true})
-  T(docB1._conflicts == null);
+  TEquals(undefined, docB1._conflicts)
 
   //now we hit the limit
   for( var i=0; i < newLimit; i++) {

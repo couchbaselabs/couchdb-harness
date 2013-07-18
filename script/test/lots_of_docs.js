@@ -30,7 +30,7 @@ couchTests.lots_of_docs = function(debug) {
   // query all documents, and return the doc.integer member as a key.
   results = db.query(function(doc){ emit(doc.integer, null) });
 
-  T(results.total_rows == numDocsToCreate);
+  TEquals(numDocsToCreate, results.total_rows)
 
   // validate the keys are ordered ascending
   for(var i=0; i<numDocsToCreate; i++) {
@@ -42,7 +42,7 @@ couchTests.lots_of_docs = function(debug) {
     descending: true
   });
 
-  T(results.total_rows == numDocsToCreate);
+  TEquals(numDocsToCreate, results.total_rows)
 
   // validate the keys are ordered descending
   for(var i=0; i<numDocsToCreate; i++) {
@@ -51,5 +51,5 @@ couchTests.lots_of_docs = function(debug) {
 
   // Check _all_docs with descending=true again (now that there are many docs)
   var desc = db.allDocs({descending:true});
-  T(desc.total_rows == desc.rows.length);
+  TEquals(desc.rows.length, desc.total_rows)
 };

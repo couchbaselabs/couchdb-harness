@@ -21,7 +21,7 @@ couchTests.batch_save = function(debug) {
     T(db.save({_id:i.toString(),a:i,b:i},  {batch : "ok"}).ok);
     
     // test that response is 202 Accepted
-    T(db.last_req.status == 202);
+    TEquals(202, db.last_req.status)
   }
   
   for(i=0; i < 100; i++) {
@@ -29,7 +29,7 @@ couchTests.batch_save = function(debug) {
     T(db.save({_id:"foo",a:i,b:i},  {batch : "ok"}).ok);
     
     // test that response is 202 Accepted
-    T(db.last_req.status == 202);
+    TEquals(202, db.last_req.status)
   }
   
   while(db.allDocs().total_rows != 101){};

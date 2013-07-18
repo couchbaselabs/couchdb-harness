@@ -31,13 +31,13 @@ couchTests.view_conflicts = function(debug) {
   CouchDB.replicate(dbA.name, dbB.name);
 
   var doc = dbB.open("foo", {conflicts: true});
-  T(doc._conflicts.length == 1);
+  TEquals(1, doc._conflicts.length)
   var conflictRev = doc._conflicts[0];
   if (doc.bar == 41) { // A won
-    T(conflictRev == docB._rev);
+    TEquals(docB._rev, conflictRev)
   } else { // B won
-    T(doc.bar == 43);
-    T(conflictRev == docA._rev);
+    TEquals(43, doc.bar)
+    TEquals(docA._rev, conflictRev)
   }
 
   var results = dbB.query(function(doc) {
@@ -45,5 +45,5 @@ couchTests.view_conflicts = function(debug) {
       emit(doc._id, doc._conflicts);
     }
   });
-  T(results.rows[0].value[0] == conflictRev);
+  TEquals(conflictRev, results.rows[0].value[0])
 };

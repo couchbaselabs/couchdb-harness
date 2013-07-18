@@ -32,12 +32,12 @@ couchTests.design_paths = function(debug) {
     // ddoc is getable
     var xhr = CouchDB.request("GET", "/"+dbName+"/_design/test");
     var resp = JSON.parse(xhr.responseText);
-    T(resp._id == "_design/test");
+    TEquals("_design/test", resp._id)
 
     // it's at 2 urls...
     var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Ftest");
     var resp = JSON.parse(xhr.responseText);
-    T(resp._id == "_design/test");
+    TEquals("_design/test", resp._id)
 
     // ensure that views are addressable
     resp = db.view("test/testing")
@@ -58,15 +58,15 @@ couchTests.design_paths = function(debug) {
     // ddoc is getable
     var xhr = CouchDB.request("GET", "/"+dbName+"/_design/test2");
     var resp = JSON.parse(xhr.responseText);
-    T(resp._id == "_design/test2");
+    TEquals("_design/test2", resp._id)
 
     // it's at 2 urls...
     var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Ftest2");
     var resp = JSON.parse(xhr.responseText);
-    T(resp._id == "_design/test2");
+    TEquals("_design/test2", resp._id)
 
     // ensure that views are addressable
     resp = db.view("test2/testing");
-    T(resp.total_rows == 0);
+    TEquals(0, resp.total_rows)
   };
 };

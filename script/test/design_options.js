@@ -37,16 +37,16 @@ couchTests.design_options = function(debug) {
 
   // should work for temp views
   var rows = db.query(map, null, {options:{include_design: true}}).rows;
-  T(rows.length == 1);
-  T(rows[0].value == "_design/fu");
+  TEquals(1, rows.length)
+  TEquals("_design/fu", rows[0].value)
 
   rows = db.query(map).rows;
-  T(rows.length == 0);
+  TEquals(0, rows.length)
 
   // when true, should include design docs in views
   rows = db.view("fu/data").rows;
-  T(rows.length == 1);
-  T(rows[0].value == "_design/fu");
+  TEquals(1, rows.length)
+  TEquals("_design/fu", rows[0].value)
 
   // when false, should not
   designDoc.options.include_design = false;
@@ -54,7 +54,7 @@ couchTests.design_options = function(debug) {
   designDoc._id = "_design/bingo";
   T(db.save(designDoc).ok);
   rows = db.view("bingo/data").rows;
-  T(rows.length == 0);
+  TEquals(0, rows.length)
 
   // should default to false
   delete designDoc.options;
@@ -62,7 +62,7 @@ couchTests.design_options = function(debug) {
   designDoc._id = "_design/bango";
   T(db.save(designDoc).ok);
   rows = db.view("bango/data").rows;
-  T(rows.length == 0);
+  TEquals(0, rows.length)
 
   // should also have local_seq in the view
   var resp = db.save({});

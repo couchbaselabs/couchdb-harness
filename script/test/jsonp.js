@@ -15,14 +15,14 @@ var jsonp_flag = 0;
 
 // Callbacks
 function jsonp_no_chunk(doc) {
-  T(jsonp_flag == 0);
-  T(doc._id == "0");
+  TEquals(0, jsonp_flag)
+  TEquals("0", doc._id)
   jsonp_flag = 1;
 }
 
 function jsonp_chunk(doc) {
-  T(jsonp_flag == 0);
-  T(doc.total_rows == 1);
+  TEquals(0, jsonp_flag)
+  TEquals(1, doc.total_rows)
   jsonp_flag = 1;
 }
 
@@ -49,12 +49,12 @@ couchTests.jsonp = function(debug) {
     // Test unchunked callbacks.
     var xhr = CouchDB.request("GET", "/test_suite_db/0?callback=jsonp_no_chunk");
     TEquals("text/javascript", xhr.getResponseHeader("Content-Type"));
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     jsonp_flag = 0;
     eval(xhr.responseText);
-    T(jsonp_flag == 1);
+    TEquals(1, jsonp_flag)
     xhr = CouchDB.request("GET", "/test_suite_db/0?callback=foo\"");
-    T(xhr.status == 400);
+    TEquals(400, xhr.status)
 
     // Test chunked responses
     var doc = {_id:"1",a:1,b:1};
@@ -72,12 +72,12 @@ couchTests.jsonp = function(debug) {
     var url = "/test_suite_db/_design/test/_view/all_docs?callback=jsonp_chunk";
     xhr = CouchDB.request("GET", url);
     TEquals("text/javascript", xhr.getResponseHeader("Content-Type"));
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     jsonp_flag = 0;
     eval(xhr.responseText);
-    T(jsonp_flag == 1);
+    TEquals(1, jsonp_flag)
     xhr = CouchDB.request("GET", url + "\'");
-    T(xhr.status == 400);
+    TEquals(400, xhr.status)
   });
 
 

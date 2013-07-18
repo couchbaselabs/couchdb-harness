@@ -160,33 +160,33 @@ couchTests.oauth = function(debug) {
 
           // Get request token via Authorization header
           xhr = oauthRequest("GET", CouchDB.protocol + host + "/_oauth/request_token", message, accessor);
-          T(xhr.status == expectedCode);
+          TEquals(expectedCode, xhr.status)
 
           // GET request token via query parameters
           xhr = oauthRequest("GET", CouchDB.protocol + host + "/_oauth/request_token", message, accessor);
-          T(xhr.status == expectedCode);
+          TEquals(expectedCode, xhr.status)
 
           responseMessage = OAuth.decodeForm(xhr.responseText);
 
           // Obtaining User Authorization
           //Only needed for 3-legged OAuth
           //xhr = CouchDB.request("GET", authorization_url + '?oauth_token=' + responseMessage.oauth_token);
-          //T(xhr.status == expectedCode);
+          //TEquals(expectedCode, xhr.status)
 
           xhr = oauthRequest("GET", CouchDB.protocol + host + "/_session", message, accessor);
-          T(xhr.status == expectedCode);
+          TEquals(expectedCode, xhr.status)
           if (xhr.status == expectedCode == 200) {
             data = JSON.parse(xhr.responseText);
-            T(data.name == "jason");
-            T(data.roles[0] == "test");
+            TEquals("jason", data.name)
+            TEquals("test", data.roles[0])
           }
 
           xhr = oauthRequest("GET", CouchDB.protocol + host + "/_session?foo=bar", message, accessor);
-          T(xhr.status == expectedCode);
+          TEquals(expectedCode, xhr.status)
 
           // Test HEAD method
           xhr = oauthRequest("HEAD", CouchDB.protocol + host + "/_session?foo=bar", message, accessor);
-          T(xhr.status == expectedCode);
+          TEquals(expectedCode, xhr.status)
 
           // Replication
           var dbA = new CouchDB("test_suite_db_a", {
@@ -218,7 +218,7 @@ couchTests.oauth = function(debug) {
           };
           T(dbC.save(ddoc).ok);
           xhr = oauthRequest("GET", CouchDB.protocol + host + "/test_suite_db_c/" + ddocId + "/_rewrite/foo/bar", message, accessor);
-          T(xhr.status == expectedCode);
+          TEquals(expectedCode, xhr.status)
 
           // Test auth via admin user defined in .ini
           var message = {
@@ -233,8 +233,8 @@ couchTests.oauth = function(debug) {
           xhr = oauthRequest("GET", CouchDB.protocol + host + "/_session?foo=bar", message, adminAccessor);
           if (xhr.status == expectedCode == 200) {
             data = JSON.parse(xhr.responseText);
-            T(data.name == "testadmin");
-            T(data.roles[0] == "_admin");
+            TEquals("testadmin", data.name)
+            TEquals("_admin", data.roles[0])
           }
 
           // Test when the user's token doesn't exist.
@@ -252,7 +252,7 @@ couchTests.oauth = function(debug) {
         },
         body: JSON.stringify("false")
       });
-      T(xhr.status == 200);
+      TEquals(200, xhr.status)
 
       var xhr = CouchDB.request("DELETE", CouchDB.protocol + host + "/_config/admins/testadmin", {
         headers: {
@@ -260,7 +260,7 @@ couchTests.oauth = function(debug) {
           "X-Couch-Persist": "false"
         }
       });
-      T(xhr.status == 200);
+      TEquals(200, xhr.status)
     }
   };
 

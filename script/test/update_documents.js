@@ -115,55 +115,55 @@ couchTests.update_documents = function(debug) {
   // update error
   var xhr = CouchDB.request("POST", "/test_suite_db/_design/update/_update/");
   T(xhr.status == 404, 'Should be missing');
-  T(JSON.parse(xhr.responseText).reason == "Invalid path.");
+  TEquals("Invalid path.", JSON.parse(xhr.responseText).reason)
   
   // hello update world
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/hello/"+docid);
-  T(xhr.status == 201);
-  T(xhr.responseText == "<p>hello doc</p>");
+  TEquals(201, xhr.status)
+  TEquals("<p>hello doc</p>", xhr.responseText)
   T(/charset=utf-8/.test(xhr.getResponseHeader("Content-Type")));
   T(equals(docid, xhr.getResponseHeader("X-Couch-Id")));
 
   doc = db.open(docid);
-  T(doc.world == "hello");
+  TEquals("hello", doc.world)
 
   // Fix for COUCHDB-379
   T(equals(xhr.getResponseHeader("Server").substr(0,7), "CouchDB"));
 
   // hello update world (no docid)
   xhr = CouchDB.request("POST", "/test_suite_db/_design/update/_update/hello");
-  T(xhr.status == 200);
-  T(xhr.responseText == "<p>Empty World</p>");
+  TEquals(200, xhr.status)
+  TEquals("<p>Empty World</p>", xhr.responseText)
 
   // no GET allowed
   xhr = CouchDB.request("GET", "/test_suite_db/_design/update/_update/hello");
-  // T(xhr.status == 405); // TODO allow qs to throw error code as well as error message
-  T(JSON.parse(xhr.responseText).error == "method_not_allowed");
+  // TEquals(405, xhr.status) // TODO allow qs to throw error code as well as error message
+  TEquals("method_not_allowed", JSON.parse(xhr.responseText).error)
 
   // // hello update world (non-existing docid)
   xhr = CouchDB.request("GET", "/test_suite_db/nonExistingDoc");
-  T(xhr.status == 404);
+  TEquals(404, xhr.status)
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/hello/nonExistingDoc");
-  T(xhr.status == 201);
-  T(xhr.responseText == "<p>New World</p>");
+  TEquals(201, xhr.status)
+  TEquals("<p>New World</p>", xhr.responseText)
   xhr = CouchDB.request("GET", "/test_suite_db/nonExistingDoc");
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
 
   // in place update 
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/in-place/"+docid+'?field=title&value=test');
-  T(xhr.status == 201);
-  T(xhr.responseText == "set title to test");
+  TEquals(201, xhr.status)
+  TEquals("set title to test", xhr.responseText)
   doc = db.open(docid);
-  T(doc.title == "test");
+  TEquals("test", doc.title)
   
   // bump counter
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/bump-counter/"+docid, {
     headers : {"X-Couch-Full-Commit":"true"}
   });
-  T(xhr.status == 201);
-  T(xhr.responseText == "<h1>bumped it!</h1>");
+  TEquals(201, xhr.status)
+  TEquals("<h1>bumped it!</h1>", xhr.responseText)
   doc = db.open(docid);
-  T(doc.counter == 1);
+  TEquals(1, doc.counter)
   
   // _update honors full commit if you need it to
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/bump-counter/"+docid, {
@@ -172,26 +172,26 @@ couchTests.update_documents = function(debug) {
   
   var NewRev = xhr.getResponseHeader("X-Couch-Update-NewRev");
   doc = db.open(docid);
-  T(doc['_rev'] == NewRev);
+  TEquals(NewRev, doc['_rev'])
   
   
-  T(doc.counter == 2);
+  TEquals(2, doc.counter)
 
   // parse xml
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/xml/"+docid, {
     headers : {"X-Couch-Full-Commit":"true"},
     "body" : '<xml><foo>bar</foo></xml>'
   });
-  T(xhr.status == 201);
-  T(xhr.responseText == "<xml>\n  <title>test</title>\n</xml>");
+  TEquals(201, xhr.status)
+  TEquals("<xml>\n  <title>test</title>\n</xml>", xhr.responseText)
   
   doc = db.open(docid);
-  T(doc.via_xml == "bar");
+  TEquals("bar", doc.via_xml)
   
   // Server provides UUID when POSTing without an ID in the URL
   xhr = CouchDB.request("POST", "/test_suite_db/_design/update/_update/get-uuid/");
-  T(xhr.status == 200);
-  T(xhr.responseText.length == 32);
+  TEquals(200, xhr.status)
+  TEquals(32, xhr.responseText.length)
 
   // COUCHDB-1229 - allow slashes in doc ids for update handlers
   // /db/_design/doc/_update/handler/doc/id
@@ -213,13 +213,13 @@ couchTests.update_documents = function(debug) {
   xhr = CouchDB.request("PUT", "/test_suite_db/_design/update/_update/code-n-bump/"+docid, {
     headers : {"X-Couch-Full-Commit":"true"}
   });
-  T(xhr.status == 302);
-  T(xhr.responseText == "<h1>bumped it!</h1>");
+  TEquals(302, xhr.status)
+  TEquals("<h1>bumped it!</h1>", xhr.responseText)
   doc = db.open(docid);
-  T(doc.counter == 3);
+  TEquals(3, doc.counter)
 
   xhr = CouchDB.request("POST", "/test_suite_db/_design/update/_update/resp-code/");
-  T(xhr.status == 302);
+  TEquals(302, xhr.status)
 
   xhr = CouchDB.request("POST", "/test_suite_db/_design/update/_update/resp-code-and-json/");
   TEquals(302, xhr.status);
@@ -230,8 +230,8 @@ couchTests.update_documents = function(debug) {
     headers : {"X-Couch-Full-Commit":"false"},
     body    : 'rubbish'
   });
-  T(xhr.status == 201);
-  T(xhr.responseText == "hello world!");
+  TEquals(201, xhr.status)
+  TEquals("hello world!", xhr.responseText)
   T(/application\/octet-stream/.test(xhr.getResponseHeader("Content-Type")));
 
   // Insert doc with empty id

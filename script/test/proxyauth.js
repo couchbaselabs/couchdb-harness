@@ -42,7 +42,7 @@ couchTests.proxyauth = function(debug) {
     }, "test");
     T(usersDb.save(benoitcUserDoc).ok);
     
-    T(CouchDB.session().userCtx.name == null);
+    TIsnull(CouchDB.session().userCtx.name)
 
     // test that you can use basic auth aginst the users db
     var s = CouchDB.session({
@@ -50,8 +50,8 @@ couchTests.proxyauth = function(debug) {
         "Authorization" : "Basic YmVub2l0Y0BhcGFjaGUub3JnOnRlc3Q="
       }
     });
-    T(s.userCtx.name == "benoitc@apache.org");
-    T(s.info.authenticated == "default");
+    TEquals("benoitc@apache.org", s.userCtx.name)
+    TEquals("default", s.info.authenticated)
     
     CouchDB.logout();
     
@@ -79,25 +79,25 @@ couchTests.proxyauth = function(debug) {
     
     var req = CouchDB.request("GET", "/test_suite_db/_design/test/_show/welcome",
                         {headers: headers});
-    T(req.responseText == "Welcome benoitc@apache.org");
+    TEquals("Welcome benoitc@apache.org", req.responseText)
     
     req = CouchDB.request("GET", "/test_suite_db/_design/test/_show/role",
                         {headers: headers});
-    T(req.responseText == "test");
+    TEquals("test", req.responseText)
     
     var xhr = CouchDB.request("PUT", "/_config/couch_httpd_auth/proxy_use_secret",{
       body : JSON.stringify("true"),
       headers: {"X-Couch-Persist": "false"}
     });
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     
     req = CouchDB.request("GET", "/test_suite_db/_design/test/_show/welcome",
                         {headers: headers});
-    T(req.responseText == "Welcome benoitc@apache.org");
+    TEquals("Welcome benoitc@apache.org", req.responseText)
     
     req = CouchDB.request("GET", "/test_suite_db/_design/test/_show/role",
                         {headers: headers});
-    T(req.responseText == "test");
+    TEquals("test", req.responseText)
     
   }
   

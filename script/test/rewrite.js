@@ -289,12 +289,12 @@ couchTests.rewrite = function(debug) {
         // test simple rewriting
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/foo");
-        T(req.responseText == "This is a base64 encoded text");
-        T(req.getResponseHeader("Content-Type") == "text/plain");
+        TEquals("This is a base64 encoded text", req.responseText)
+        TEquals("text/plain", req.getResponseHeader("Content-Type"))
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/foo2");
-        T(req.responseText == "This is a base64 encoded text");
-        T(req.getResponseHeader("Content-Type") == "text/plain");
+        TEquals("This is a base64 encoded text", req.responseText)
+        TEquals("text/plain", req.getResponseHeader("Content-Type"))
         
         
         // test POST
@@ -306,42 +306,42 @@ couchTests.rewrite = function(debug) {
         var docid = resp.id;
         
         xhr = CouchDB.request("PUT", "/"+dbName+"/_design/test/_rewrite/hello/"+docid);
-        T(xhr.status == 201);
-        T(xhr.responseText == "hello doc");
+        TEquals(201, xhr.status)
+        TEquals("hello doc", xhr.responseText)
         T(/charset=utf-8/.test(xhr.getResponseHeader("Content-Type")))
         
         doc = db.open(docid);
-        T(doc.world == "hello");
+        TEquals("hello", doc.world)
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome?name=user");
-        T(req.responseText == "Welcome user");
+        TEquals("Welcome user", req.responseText)
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome/user");
-        T(req.responseText == "Welcome user");
+        TEquals("Welcome user", req.responseText)
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome2");
-        T(req.responseText == "Welcome user");
+        TEquals("Welcome user", req.responseText)
         
         xhr = CouchDB.request("PUT", "/"+dbName+"/_design/test/_rewrite/welcome3/test");
-        T(xhr.status == 201);
-        T(xhr.responseText == "New World");
+        TEquals(201, xhr.status)
+        TEquals("New World", xhr.responseText)
         T(/charset=utf-8/.test(xhr.getResponseHeader("Content-Type")));
         
         xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome3/test");
-        T(xhr.responseText == "Welcome test");
+        TEquals("Welcome test", xhr.responseText)
 
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome4/user");
-        T(req.responseText == "Welcome user");
+        TEquals("Welcome user", req.responseText)
 
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome5/welcome3");
-        T(req.responseText == "Welcome welcome3");
+        TEquals("Welcome welcome3", req.responseText)
         
         xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/basicView");
-        T(xhr.status == 200, "view call");
+        TEquals(200, xhr.status, "view call")
         T(/{"total_rows":9/.test(xhr.responseText)); 
 
         xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/");
-        T(xhr.status == 200, "view call");
+        TEquals(200, xhr.status, "view call")
         T(/{"total_rows":9/.test(xhr.responseText)); 
 
         
@@ -410,9 +410,9 @@ couchTests.rewrite = function(debug) {
         T(db.save(designDoc).ok);
         
         var xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/uuids");
-        T(xhr.status == 500);
+        TEquals(500, xhr.status)
         var result = JSON.parse(xhr.responseText);
-        T(result.error == "insecure_rewrite_rule");
+        TEquals("insecure_rewrite_rule", result.error)
 
         run_on_modified_server(
           [{section: "httpd",
@@ -420,9 +420,9 @@ couchTests.rewrite = function(debug) {
             value: "false"}],
           function() {
             var xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/uuids?cache=bust");
-            T(xhr.status == 200);
+            TEquals(200, xhr.status)
             var result = JSON.parse(xhr.responseText);
-            T(result.uuids.length == 1);
+            TEquals(1, result.uuids.length)
             var first = result.uuids[0];
           });
       });

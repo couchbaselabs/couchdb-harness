@@ -76,23 +76,23 @@ couchTests.attachment_views= function(debug) {
 
   var result = db.query(mapFunction, reduceFunction);
 
-  T(result.rows.length == 1);
-  T(result.rows[0].value == 60);
+  TEquals(1, result.rows.length)
+  TEquals(60, result.rows[0].value)
 
   var result = db.query(mapFunction, reduceFunction, {
     startkey:10,
     endkey:19
   });
 
-  T(result.rows.length == 1);
-  T(result.rows[0].value == 10);
+  TEquals(1, result.rows.length)
+  TEquals(10, result.rows[0].value)
 
   var result = db.query(mapFunction, reduceFunction, {
     startkey:20,
     endkey:29
   });
 
-  T(result.rows.length == 1);
-  T(result.rows[0].value == 20);
+  TEquals(1, result.rows.length)
+  TEquals(20, result.rows[0].value)
 
 };

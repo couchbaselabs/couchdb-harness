@@ -30,8 +30,8 @@ couchTests.reduce_false_temp = function(debug) {
 
   //Test that we get our docs back
   res = db.query(mapFun, reduceFun, {reduce: false});
-  T(res.rows.length == 5);
+  TEquals(5, res.rows.length)
   for(var i=0; i<5; i++) {
-    T(res.rows[i].value == i+1);
+    TEquals(i+1, res.rows[i].value)
   }
 };

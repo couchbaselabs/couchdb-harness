@@ -27,7 +27,7 @@ couchTests.all_docs = function(debug) {
   var results = db.allDocs();
   var rows = results.rows;
 
-  T(results.total_rows == results.rows.length);
+  TEquals(results.rows.length, results.total_rows)
 
   for(var i=0; i < rows.length; i++) {
     T(rows[i].id >= "0" && rows[i].id <= "4");
@@ -35,12 +35,12 @@ couchTests.all_docs = function(debug) {
 
   // Check _all_docs with descending=true
   var desc = db.allDocs({descending:true});
-  T(desc.total_rows == desc.rows.length);
+  TEquals(desc.rows.length, desc.total_rows)
 
   // Check _all_docs offset
   // https://github.com/daleharvey/pouchdb/pull/527#issuecomment-15471668
   // var all = db.allDocs({startkey:"2"});
-  // T(all.offset == 2);
+  // TEquals(2, all.offset)
 
   // Confirm that queries may assume raw collation.
   var raw = db.allDocs({ startkey: "org.couchdb.user:",
@@ -70,8 +70,8 @@ couchTests.all_docs = function(debug) {
   T(deleted.ok);
   changes = db.changes();
   // the deletion should make doc id 1 have the last seq num
-  T(changes.results.length == 4);
-  T(changes.results[3].id == "1");
+  TEquals(4, changes.results.length)
+  TEquals("1", changes.results[3].id)
   T(changes.results[3].deleted);
 
   // do an update
@@ -81,14 +81,14 @@ couchTests.all_docs = function(debug) {
   changes = db.changes();
 
   // the update should make doc id 3 have the last seq num
-  T(changes.results.length == 4);
-  T(changes.results[3].id == "3");
+  TEquals(4, changes.results.length)
+  TEquals("3", changes.results[3].id)
 
   // ok now lets see what happens with include docs
   changes = db.changes({include_docs: true});
-  T(changes.results.length == 4);
-  T(changes.results[3].id == "3");
-  T(changes.results[3].doc.updated == "totally");
+  TEquals(4, changes.results.length)
+  TEquals("3", changes.results[3].id)
+  TEquals("totally", changes.results[3].doc.updated)
 
   T(changes.results[2].doc);
   T(changes.results[2].doc._deleted);
@@ -98,7 +98,7 @@ couchTests.all_docs = function(debug) {
   TEquals("1", rows[0].key);
   TEquals("1", rows[0].id);
   TEquals(true, rows[0].value.deleted);
-  // TEquals(null, rows[0].doc);
+  // TIsnull(rows[0].doc);
 
   // add conflicts
   var conflictDoc1 = {
@@ -137,7 +137,7 @@ couchTests.all_docs = function(debug) {
   db.save({_id: "a", foo: "a"});
 
   var rows = db.allDocs({startkey: "Z", endkey: "Z"}).rows;
-  T(rows.length == 1);
+  TEquals(1, rows.length)
 
   // cleanup
   db.deleteDb();

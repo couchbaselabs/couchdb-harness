@@ -36,11 +36,11 @@ couchTests.reader_acl = function(debug) {
       T(usersDb.save(jchrisUserDoc).ok);
       usersDb.ensureFullCommit();
 
-      T(CouchDB.session().userCtx.name == null);
+      TIsnull(CouchDB.session().userCtx.name)
 
       // set secret db to be read controlled
       T(secretDb.save({_id:"baz",foo:"bar"}).ok);
-      T(secretDb.open("baz").foo == "bar");
+      TEquals("bar", secretDb.open("baz").foo)
 
       T(secretDb.setSecObj({
         "members" : {
@@ -58,7 +58,7 @@ couchTests.reader_acl = function(debug) {
     try {
       // can't read it as jchris b/c he's missing the needed role
       T(CouchDB.login("jchris@apache.org", "funnybone").ok);
-      T(CouchDB.session().userCtx.name == "jchris@apache.org");
+      TEquals("jchris@apache.org", CouchDB.session().userCtx.name)
 
       try {
         secretDb.open("baz");
@@ -86,7 +86,7 @@ couchTests.reader_acl = function(debug) {
       T(CouchDB.login("jchris@apache.org", "funnybone").ok);
 
       // db admin can read
-      T(secretDb.open("baz").foo == "bar");
+      TEquals("bar", secretDb.open("baz").foo)
 
       // and run temp views
       TEquals(secretDb.query(function(doc) {
@@ -110,7 +110,7 @@ couchTests.reader_acl = function(debug) {
       }).ok);
 
       // server _admin can always read
-      T(secretDb.open("baz").foo == "bar");
+      TEquals("bar", secretDb.open("baz").foo)
 
       // and run temp views
       TEquals(secretDb.query(function(doc) {
@@ -128,10 +128,10 @@ couchTests.reader_acl = function(debug) {
 
       // now top-secret users can read too
       T(CouchDB.login("jchris@apache.org", "funnybone").ok);
-      T(CouchDB.session().userCtx.roles.indexOf("_admin") == -1);
-      T(secretDb.open("baz").foo == "bar");
+      TEquals(-1, CouchDB.session().userCtx.roles.indexOf("_admin"))
+      TEquals("bar", secretDb.open("baz").foo)
       // members can query stored views
-      T(secretDb.view("foo/bar").total_rows == 1);
+      TEquals(1, secretDb.view("foo/bar").total_rows)
       
       // members can't do temp views
       try {
@@ -158,8 +158,8 @@ couchTests.reader_acl = function(debug) {
       }).ok);
 
       T(CouchDB.login("jchris@apache.org", "funnybone").ok);
-      T(CouchDB.session().userCtx.roles.indexOf("_admin") == -1);
-      T(secretDb.open("baz").foo == "bar");
+      TEquals(-1, CouchDB.session().userCtx.roles.indexOf("_admin"))
+      TEquals("bar", secretDb.open("baz").foo)
 
       // can't set non string reader names or roles
       try {

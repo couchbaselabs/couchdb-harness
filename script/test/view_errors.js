@@ -29,23 +29,23 @@ couchTests.view_errors = function(debug) {
       var results = db.query(function(doc) {
         emit(doc.undef, null);
       });
-      T(results.total_rows == 1);
-      T(results.rows[0].key == null);
+      TEquals(1, results.total_rows)
+      TIsnull(results.rows[0].key)
 
       // if a view function throws an exception, its results are not included in
       // the view index, but the view does not itself raise an error
       var results = db.query(function(doc) {
         doc.undef(); // throws an error
       });
-      T(results.total_rows == 0);
+      TEquals(0, results.total_rows)
 
       // if a view function includes an undefined value in the emitted key or
       // value, it is treated as null
       var results = db.query(function(doc) {
         emit([doc._id, doc.undef], null);
       });
-      T(results.total_rows == 1);
-      T(results.rows[0].key[1] == null);
+      TEquals(1, results.total_rows)
+      TIsnull(results.rows[0].key[1])
       
       // querying a view with invalid params should give a resonable error message
       var xhr = CouchDB.request("POST", "/test_suite_db/_temp_view?startkey=foo", {
@@ -54,7 +54,7 @@ couchTests.view_errors = function(debug) {
           map : "function(doc){emit(doc.integer)}"
         })
       });
-      T(JSON.parse(xhr.responseText).error == "bad_request");
+      TEquals("bad_request", JSON.parse(xhr.responseText).error)
 
       // content type must be json
       var xhr = CouchDB.request("POST", "/test_suite_db/_temp_view", {
@@ -63,7 +63,7 @@ couchTests.view_errors = function(debug) {
           map : "function(doc){}"
         })
       });
-      T(xhr.status == 415);
+      TEquals(415, xhr.status)
 
       var map = function (doc) {emit(doc.integer, doc.integer);};
 
@@ -71,7 +71,7 @@ couchTests.view_errors = function(debug) {
           db.query(map, null, {group: true});
           T(0 == 1);
       } catch(e) {
-          T(e.error == "query_parse_error");
+          TEquals("query_parse_error", e.error)
       }
 
       var designDoc = {
@@ -101,24 +101,24 @@ couchTests.view_errors = function(debug) {
           db.view("test/no_reduce", {group: true});
           T(0 == 1);
       } catch(e) {
-          T(db.last_req.status == 400);
-          T(e.error == "query_parse_error");
+          TEquals(400, db.last_req.status)
+          TEquals("query_parse_error", e.error)
       }
 
       try {
           db.view("test/no_reduce", {group_level: 1});
           T(0 == 1);
       } catch(e) {
-          T(db.last_req.status == 400);
-          T(e.error == "query_parse_error");
+          TEquals(400, db.last_req.status)
+          TEquals("query_parse_error", e.error)
       }
 
       try {
         db.view("test/no_reduce", {reduce: true});
         T(0 == 1);
       } catch(e) {
-        T(db.last_req.status == 400);
-        T(e.error == "query_parse_error");
+        TEquals(400, db.last_req.status)
+        TEquals("query_parse_error", e.error)
       }
 
       db.view("test/no_reduce", {reduce: false});
@@ -129,16 +129,16 @@ couchTests.view_errors = function(debug) {
           db.view("test/with_reduce", {group: true, reduce: false});
           T(0 == 1);
       } catch(e) {
-          T(db.last_req.status == 400);
-          T(e.error == "query_parse_error");
+          TEquals(400, db.last_req.status)
+          TEquals("query_parse_error", e.error)
       }
 
       try {
           db.view("test/with_reduce", {group_level: 1, reduce: false});
           T(0 == 1);
       } catch(e) {
-        T(db.last_req.status == 400);
-          T(e.error == "query_parse_error");
+        TEquals(400, db.last_req.status)
+        TEquals("query_parse_error", e.error)
       }
 
       var designDoc3 = {
@@ -154,35 +154,35 @@ couchTests.view_errors = function(debug) {
           db.view("infinite/infinite_loop");
           T(0 == 1);
       } catch(e) {
-          T(e.error == "os_process_error");
+          TEquals("os_process_error", e.error)
       }
 
       // Check error responses for invalid multi-get bodies.
       var path = "/test_suite_db/_design/test/_view/no_reduce";
       var xhr = CouchDB.request("POST", path, {body: "[]"});
-      T(xhr.status == 400);
+      TEquals(400, xhr.status)
       result = JSON.parse(xhr.responseText);
-      T(result.error == "bad_request");
-      T(result.reason == "Request body must be a JSON object");
+      TEquals("bad_request", result.error)
+      TEquals("Request body must be a JSON object", result.reason)
       var data = "{\"keys\": 1}";
       xhr = CouchDB.request("POST", path, {body:data});
-      T(xhr.status == 400);
+      TEquals(400, xhr.status)
       result = JSON.parse(xhr.responseText);
-      T(result.error == "bad_request");
-      T(result.reason == "`keys` member must be a array.");
+      TEquals("bad_request", result.error)
+      TEquals("`keys` member must be a array.", result.reason)
 
       // if the reduce grows to fast, throw an overflow error
       var path = "/test_suite_db/_design/testbig/_view/reduce_too_big";
       xhr = CouchDB.request("GET", path);
-      T(xhr.status == 500);
+      TEquals(500, xhr.status)
       result = JSON.parse(xhr.responseText);
-      T(result.error == "reduce_overflow_error");
+      TEquals("reduce_overflow_error", result.error)
 
       try {
           db.query(function() {emit(null, null)}, null, {startkey: 2, endkey:1});
           T(0 == 1);
       } catch(e) {
-          T(e.error == "query_parse_error");
+          TEquals("query_parse_error", e.error)
           T(e.reason.match(/no rows can match/i));
       }
     });

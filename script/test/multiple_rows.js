@@ -32,17 +32,17 @@ couchTests.multiple_rows = function(debug) {
   var results = db.query(generateListOfCitiesAndState);
   var rows = results.rows;
 
-  T(rows[0].key == "Boston, MA");
-  T(rows[1].key == "Cambridge, MA");
-  T(rows[2].key == "Charlotte, NC");
-  T(rows[3].key == "Lowell, MA");
-  T(rows[4].key == "Miami, FL");
-  T(rows[5].key == "Orlando, FL");
-  T(rows[6].key == "Raleigh, NC");
-  T(rows[7].key == "Springfield, FL");
-  T(rows[8].key == "Springfield, MA");
-  T(rows[9].key == "Tampa, FL");
-  T(rows[10].key == "Worcester, MA");
+  TEquals("Boston, MA", rows[0].key)
+  TEquals("Cambridge, MA", rows[1].key)
+  TEquals("Charlotte, NC", rows[2].key)
+  TEquals("Lowell, MA", rows[3].key)
+  TEquals("Miami, FL", rows[4].key)
+  TEquals("Orlando, FL", rows[5].key)
+  TEquals("Raleigh, NC", rows[6].key)
+  TEquals("Springfield, FL", rows[7].key)
+  TEquals("Springfield, MA", rows[8].key)
+  TEquals("Tampa, FL", rows[9].key)
+  TEquals("Worcester, MA", rows[10].key)
 
   // add another city to NC
   nc.cities.push("Wilmington");
@@ -51,18 +51,18 @@ couchTests.multiple_rows = function(debug) {
   var results = db.query(generateListOfCitiesAndState);
   var rows = results.rows;
 
-  T(rows[0].key == "Boston, MA");
-  T(rows[1].key == "Cambridge, MA");
-  T(rows[2].key == "Charlotte, NC");
-  T(rows[3].key == "Lowell, MA");
-  T(rows[4].key == "Miami, FL");
-  T(rows[5].key == "Orlando, FL");
-  T(rows[6].key == "Raleigh, NC");
-  T(rows[7].key == "Springfield, FL");
-  T(rows[8].key == "Springfield, MA");
-  T(rows[9].key == "Tampa, FL");
-  T(rows[10].key == "Wilmington, NC");
-  T(rows[11].key == "Worcester, MA");
+  TEquals("Boston, MA", rows[0].key)
+  TEquals("Cambridge, MA", rows[1].key)
+  TEquals("Charlotte, NC", rows[2].key)
+  TEquals("Lowell, MA", rows[3].key)
+  TEquals("Miami, FL", rows[4].key)
+  TEquals("Orlando, FL", rows[5].key)
+  TEquals("Raleigh, NC", rows[6].key)
+  TEquals("Springfield, FL", rows[7].key)
+  TEquals("Springfield, MA", rows[8].key)
+  TEquals("Tampa, FL", rows[9].key)
+  TEquals("Wilmington, NC", rows[10].key)
+  TEquals("Worcester, MA", rows[11].key)
 
   // now delete MA
   T(db.deleteDoc(ma).ok);
@@ -70,11 +70,11 @@ couchTests.multiple_rows = function(debug) {
   var results = db.query(generateListOfCitiesAndState);
   var rows = results.rows;
 
-  T(rows[0].key == "Charlotte, NC");
-  T(rows[1].key == "Miami, FL");
-  T(rows[2].key == "Orlando, FL");
-  T(rows[3].key == "Raleigh, NC");
-  T(rows[4].key == "Springfield, FL");
-  T(rows[5].key == "Tampa, FL");
-  T(rows[6].key == "Wilmington, NC");
+  TEquals("Charlotte, NC", rows[0].key)
+  TEquals("Miami, FL", rows[1].key)
+  TEquals("Orlando, FL", rows[2].key)
+  TEquals("Raleigh, NC", rows[3].key)
+  TEquals("Springfield, FL", rows[4].key)
+  TEquals("Tampa, FL", rows[5].key)
+  TEquals("Wilmington, NC", rows[6].key)
 };

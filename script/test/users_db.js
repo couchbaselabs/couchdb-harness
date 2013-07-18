@@ -34,7 +34,7 @@ couchTests.users_db = function(debug) {
     }, "funnybone");
     T(usersDb.save(jchrisUserDoc).ok);
     
-    T(CouchDB.session().userCtx.name == null);
+    TIsnull(CouchDB.session().userCtx.name)
 
     // test that you can use basic auth aginst the users db
     var s = CouchDB.session({
@@ -43,17 +43,17 @@ couchTests.users_db = function(debug) {
         "Authorization" : "Basic amNocmlzQGFwYWNoZS5vcmc6ZnVubnlib25l"
       }
     });
-    T(s.userCtx.name == "jchris@apache.org");
-    T(s.info.authenticated == "default");
-    T(s.info.authentication_db == "test_suite_users");
+    TEquals("jchris@apache.org", s.userCtx.name)
+    TEquals("default", s.info.authenticated)
+    TEquals("test_suite_users", s.info.authentication_db)
     TEquals(["oauth", "cookie", "default"], s.info.authentication_handlers);
     var s = CouchDB.session({
       headers : {
         "Authorization" : "Basic Xzpf" // name and pass of _:_
       }
     });
-    T(s.name == null);
-    T(s.info.authenticated == "default");
+    TEquals(undefined, s.name)
+    TEquals("default", s.info.authenticated)
     
     
     // ok, now create a conflicting edit on the jchris doc, and make sure there's no login.
@@ -70,7 +70,7 @@ couchTests.users_db = function(debug) {
     var resp = usersDb.bulkSave([jchrisUserDoc],{all_or_nothing : true});
     
     var jchrisWithConflict = usersDb.open(jchrisUserDoc._id, {conflicts : true});
-    T(jchrisWithConflict._conflicts.length == 1);
+    TEquals(1, jchrisWithConflict._conflicts.length)
     
     // no login with conflicted user doc
     try {
@@ -81,13 +81,13 @@ couchTests.users_db = function(debug) {
       });
       T(false && "this will throw");
     } catch(e) {
-      T(e.error == "unauthorized");
+      TEquals("unauthorized", e.error)
       T(/conflict/.test(e.reason));
     }
 
     // you can delete a user doc
     s = CouchDB.session().userCtx;
-    T(s.name == null);
+    TIsnull(s.name)
     T(s.roles.indexOf("_admin") !== -1);
     T(usersDb.deleteDoc(jchrisWithConflict).ok);
 
@@ -98,7 +98,7 @@ couchTests.users_db = function(debug) {
       usersDb.save(jchrisUserDoc);
       T(false && "should only allow us to save doc when type == 'user'");
     } catch(e) {
-      T(e.reason == "doc.type must be user");
+      TEquals("doc.type must be user", e.reason)
     }
     jchrisUserDoc.type = "user";
 
@@ -108,7 +108,7 @@ couchTests.users_db = function(debug) {
       usersDb.save(jchrisUserDoc);
       T(false && "should only allow us to save doc when roles is an array");
     } catch(e) {
-      T(e.reason == "doc.roles must be an array");
+      TEquals("doc.roles must be an array", e.reason)
     }
     jchrisUserDoc.roles = [];
 
@@ -118,7 +118,7 @@ couchTests.users_db = function(debug) {
       usersDb.save(jchrisUserDoc);
       T(false && "should only allow us to save doc when roles exists");
     } catch(e) {
-      T(e.reason == "doc.roles must exist");
+      TEquals("doc.roles must exist", e.reason)
     }
     jchrisUserDoc.roles = [];
 

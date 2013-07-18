@@ -14,7 +14,7 @@ couchTests.uuids = function(debug) {
   var etags = [];
   var testHashBustingHeaders = function(xhr) {
     T(xhr.getResponseHeader("Cache-Control").match(/no-cache/));
-    T(xhr.getResponseHeader("Pragma") == "no-cache");
+    TEquals("no-cache", xhr.getResponseHeader("Pragma"))
 
     var newetag = xhr.getResponseHeader("ETag");
     T(etags.indexOf(newetag) < 0);
@@ -39,25 +39,25 @@ couchTests.uuids = function(debug) {
 
   // a single UUID without an explicit count
   var xhr = CouchDB.request("GET", "/_uuids");
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
   var result = JSON.parse(xhr.responseText);
-  T(result.uuids.length == 1);
+  TEquals(1, result.uuids.length)
   var first = result.uuids[0];
   testHashBustingHeaders(xhr);
 
   // a single UUID with an explicit count
   xhr = CouchDB.request("GET", "/_uuids?count=1");
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
   result = JSON.parse(xhr.responseText);
-  T(result.uuids.length == 1);
+  TEquals(1, result.uuids.length)
   var second = result.uuids[0];
   T(first != second);
 
   // no collisions with 1,000 UUIDs
   xhr = CouchDB.request("GET", "/_uuids?count=1000");
-  T(xhr.status == 200);
+  TEquals(200, xhr.status)
   result = JSON.parse(xhr.responseText);
-  T( result.uuids.length == 1000 );
+  TEquals(1000 ,  result.uuids.length)
   var seen = {};
   for(var i in result.uuids) {
     var id = result.uuids[i];
@@ -67,15 +67,15 @@ couchTests.uuids = function(debug) {
 
   // ensure we return a 405 on POST
   xhr = CouchDB.request("POST", "/_uuids?count=1000");
-  T(xhr.status == 405);
+  TEquals(405, xhr.status)
 
   // Test sequential uuids
   var seq_testfun = function() {
     xhr = CouchDB.request("GET", "/_uuids?count=1000");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     result = JSON.parse(xhr.responseText);
     for(var i = 1; i < result.uuids.length; i++) {
-      T(result.uuids[i].length == 32);
+      TEquals(32, result.uuids[i].length)
       T(result.uuids[i-1] < result.uuids[i], "Sequential uuids are ordered.");
     }
   };
@@ -91,9 +91,9 @@ couchTests.uuids = function(debug) {
   // Test utc_random uuids
   var utc_testfun = function() {
     xhr = CouchDB.request("GET", "/_uuids?count=1000");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     result = JSON.parse(xhr.responseText);
-    T(result.uuids[1].length == 32);
+    TEquals(32, result.uuids[1].length)
 
     // no collisions
     var seen = {};
@@ -121,11 +121,11 @@ couchTests.uuids = function(debug) {
   var utc_id_suffix = "frog";
   var suffix_testfun = function() {
     xhr = CouchDB.request("GET", "/_uuids?count=10");
-    T(xhr.status == 200);
+    TEquals(200, xhr.status)
     result = JSON.parse(xhr.responseText);
     for(var i = 1; i < result.uuids.length; i++) {
-      T(result.uuids[i].length == 14 + utc_id_suffix.length);
-      T(result.uuids[i].substring(14) == utc_id_suffix);
+      TEquals(14 + utc_id_suffix.length, result.uuids[i].length)
+      TEquals(utc_id_suffix, result.uuids[i].substring(14))
       T(result.uuids[i-1] < result.uuids[i], "utc_id_suffix uuids are ordered.");
     }
   };

@@ -11,7 +11,7 @@
 // the License.
 
 function jsonp(obj) {
-  T(jsonp_flag == 0);
+  TEquals(0, jsonp_flag)
   T(obj.results.length == 1 && obj.last_seq == 1, "jsonp");
   jsonp_flag = 1;
 }
@@ -29,22 +29,22 @@ couchTests.changes = function(debug) {
   // T(resp.results.length == 0 && resp.last_seq == 0, "empty db");
   var docFoo = {_id:"foo", bar:1};
   T(db.save(docFoo).ok);
-  T(db.open(docFoo._id)._id == docFoo._id);
+  TEquals(docFoo._id, db.open(docFoo._id)._id)
 
   req = CouchDB.request("GET", "/test_suite_db/_changes");
   var resp = JSON.parse(req.responseText);
 
   // TODO: See above.
-  // T(resp.last_seq == 1);
+  // TEquals(1, resp.last_seq)
   T(resp.results.length == 1, "one doc db");
-  T(resp.results[0].changes[0].rev == docFoo._rev);
+  TEquals(docFoo._rev, resp.results[0].changes[0].rev)
 
   // TODO: https://github.com/daleharvey/pouchdb/issues/685
   // test with callback
   // req = CouchDB.request("GET", "/test_suite_db/_changes?feed=continuous&timeout=10");
   // var lines = req.responseText.split("\n");
-  // T(JSON.parse(lines[0]).changes[0].rev == docFoo._rev);
-  // T(JSON.parse(lines[1]).last_seq == 1);
+  // TEquals(docFoo._rev, JSON.parse(lines[0]).changes[0].rev)
+  // TEquals(1, JSON.parse(lines[1]).last_seq)
 
   var xhr;
 
@@ -83,12 +83,12 @@ couchTests.changes = function(debug) {
       }
     }, "bar-only");
 
-    T(change1.seq == 1);
-    T(change1.id == "foo");
+    TEquals(1, change1.seq)
+    TEquals("foo", change1.id)
 
-    T(change2.seq == 2);
-    T(change2.id == "bar");
-    T(change2.changes[0].rev == docBar._rev);
+    TEquals(2, change2.seq)
+    TEquals("bar", change2.id)
+    TEquals(docBar._rev, change2.changes[0].rev)
 
 
     var docBaz = {_id:"baz", baz:1};
@@ -103,9 +103,9 @@ couchTests.changes = function(debug) {
       }
     });
 
-    T(change3.seq == 3);
-    T(change3.id == "baz");
-    T(change3.changes[0].rev == docBaz._rev);
+    TEquals(3, change3.seq)
+    TEquals("baz", change3.id)
+    TEquals(docBaz._rev, change3.changes[0].rev)
 
 
     xhr = CouchDB.newXhr();
@@ -122,8 +122,8 @@ couchTests.changes = function(debug) {
       }
     }, "heartbeat");
 
-    T(str.charAt(str.length - 1) == "\n");
-    T(str.charAt(str.length - 2) == "\n");
+    TEquals("\n", str.charAt(str.length - 1))
+    TEquals("\n", str.charAt(str.length - 2))
 
     // otherwise we'll continue to receive heartbeats forever
     xhr.abort();
@@ -147,12 +147,12 @@ couchTests.changes = function(debug) {
 
       source.removeEventListener('message', sourceListener, false);
 
-      T(results[0].seq == 1);
-      T(results[0].id == "foo");
+      TEquals(1, results[0].seq)
+      TEquals("foo", results[0].id)
 
-      T(results[1].seq == 2);
-      T(results[1].id == "bar");
-      T(results[1].changes[0].rev == docBar._rev);
+      TEquals(2, results[1].seq)
+      TEquals("bar", results[1].id)
+      TEquals(docBar._rev, results[1].changes[0].rev)
     }
 
     // test longpolling
@@ -193,9 +193,9 @@ couchTests.changes = function(debug) {
     }, "change_lines");
 
     var change = parse_changes_line(lines[1]);
-    T(change.seq == 4);
-    T(change.id == "barz");
-    T(change.changes[0].rev == docBarz._rev);
+    TEquals(4, change.seq)
+    TEquals("barz", change.id)
+    TEquals(docBarz._rev, change.changes[0].rev)
     T(lines[3]=='"last_seq":4}');
 
 
@@ -225,9 +225,9 @@ couchTests.changes = function(debug) {
     }, "change_lines");
 
     var change = parse_changes_line(lines[1]);
-    T(change.seq == 5);
-    T(change.id == "barzzzz");
-    T(change.changes[0].rev == docBarz._rev);
+    TEquals(5, change.seq)
+    TEquals("barzzzz", change.id)
+    TEquals(docBarz._rev, change.changes[0].rev)
     T(lines[3]=='"last_seq":5}');
 
 
@@ -268,7 +268,7 @@ couchTests.changes = function(debug) {
 
   // var req = CouchDB.request("GET", "/test_suite_db/_changes?filter=changes_filter/bop");
   // var resp = JSON.parse(req.responseText);
-  // // T(resp.results.length == 0);
+  // // TEquals(0, resp.results.length)
 
   // db.save({"bop" : "foom"});
   // db.save({"bop" : false});
@@ -279,7 +279,7 @@ couchTests.changes = function(debug) {
 
   // req = CouchDB.request("GET", "/test_suite_db/_changes?filter=changes_filter/dynamic&field=woox");
   // resp = JSON.parse(req.responseText);
-  // T(resp.results.length == 0);
+  // TEquals(0, resp.results.length)
 
   // req = CouchDB.request("GET", "/test_suite_db/_changes?filter=changes_filter/dynamic&field=bop");
   // resp = JSON.parse(req.responseText);
@@ -292,7 +292,7 @@ couchTests.changes = function(debug) {
     xhr.open("GET", CouchDB.proxyUrl("/test_suite_db/_changes?feed=longpoll&filter=changes_filter/bop"), false);
     xhr.send("");
     var resp = JSON.parse(xhr.responseText);
-    T(resp.last_seq == 8);
+    TEquals(8, resp.last_seq)
     // longpoll waits until a matching change before returning
     xhr = CouchDB.newXhr();
     xhr.open("GET", CouchDB.proxyUrl("/test_suite_db/_changes?feed=longpoll&since=7&filter=changes_filter/bop"), true);
@@ -304,7 +304,7 @@ couchTests.changes = function(debug) {
       resp = JSON.parse(xhr.responseText);
     }, "longpoll-since");
 
-    T(resp.last_seq == 10);
+    TEquals(10, resp.last_seq)
     T(resp.results && resp.results.length > 0 && resp.results[0]["id"] == "bingo", "filter the correct update");
     xhr.abort();
 
@@ -320,7 +320,7 @@ couchTests.changes = function(debug) {
       db.save({"_id":"rusty", "bop" : "plankton"});
       T(xhr.readyState != 4, "test client too slow");
       var rusty = db.open("rusty", {cache_bust : new Date()});
-      T(rusty._id == "rusty");
+      TEquals("rusty", rusty._id)
 
       waitForSuccess(function() { // throws an error after 5 seconds
         if (xhr.readyState != 4) {

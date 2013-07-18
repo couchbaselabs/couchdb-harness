@@ -118,7 +118,7 @@ couchTests.users_db_security = function(debug) {
 
       // anonymous should not be able to read an existing user's user document
       var res = usersDb.open("org.couchdb.user:jchris");
-      TEquals(null, res, "anonymous user doc read should be not found");
+      TIsnull(res, "anonymous user doc read should be not found");
 
       // anonymous should not be able to read /_users/_changes
       try {
@@ -164,7 +164,7 @@ couchTests.users_db_security = function(debug) {
 
       var fdmananaDocAsReadByjchris =
         open_as(usersDb, "org.couchdb.user:fdmanana", "jchris1");
-      TEquals(null, fdmananaDocAsReadByjchris,
+      TIsnull(fdmananaDocAsReadByjchris,
         "should not_found opening another user's user doc");
 
 

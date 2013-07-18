@@ -339,7 +339,7 @@ couchTests.replication = function(debug) {
     TEquals(0, repResult.history[0].doc_write_failures);
 
     copy = targetDb.open(docs[1]._id);
-    TEquals(null, copy);
+    TIsnull(copy);
 
     var changes = targetDb.changes({since: 0});
     var idx = changes.results.length - 1;
@@ -694,7 +694,7 @@ couchTests.replication = function(debug) {
         T(copy !== null);
         TEquals(true, compareObjects(doc, copy));
       } else {
-        TEquals(null, copy);
+        TIsnull(copy);
       }
     }
 
@@ -742,7 +742,7 @@ couchTests.replication = function(debug) {
         T(copy !== null);
         TEquals(true, compareObjects(doc, copy));
       } else {
-        TEquals(null, copy);
+        TIsnull(copy);
       }
     }
 
@@ -823,10 +823,10 @@ couchTests.replication = function(debug) {
     TEquals(2, docFoo2.value);
 
     var docFoo3 = targetDb.open("foo3");
-    TEquals(null, docFoo3);
+    TIsnull(docFoo3);
 
     var docFoo4 = targetDb.open("foo4");
-    TEquals(null, docFoo4);
+    TIsnull(docFoo4);
 
     // replication should start from scratch after the filter's code changed
 
@@ -937,8 +937,8 @@ couchTests.replication = function(debug) {
         copy = targetDb.open(id);
 
         if (id.indexOf("foo_") === 0) {
-          TEquals(null, doc);
-          TEquals(null, copy);
+          TIsnull(doc);
+          TIsnull(copy);
         } else {
           T(doc !== null);
           T(copy !== null);
@@ -955,7 +955,7 @@ couchTests.replication = function(debug) {
         if ((doc_ids.indexOf(id) >= 0) || (doc_ids.indexOf(base_id) >= 0)) {
             T(doc !== null);
         } else {
-            TEquals(null, doc);
+            TIsnull(doc);
         }
       }
 
@@ -1002,8 +1002,8 @@ couchTests.replication = function(debug) {
         copy = targetDb.open(id);
 
         if (id.indexOf("foo_") === 0) {
-          TEquals(null, doc);
-          TEquals(null, copy);
+          TIsnull(doc);
+          TIsnull(copy);
         } else {
           T(doc !== null);
           T(copy !== null);
@@ -1022,7 +1022,7 @@ couchTests.replication = function(debug) {
             (after_doc_ids.indexOf(base_id) >= 0)) {
             T(doc !== null);
         } else {
-            TEquals(null, doc);
+            TIsnull(doc);
         }
       }
 
@@ -1296,9 +1296,9 @@ couchTests.replication = function(debug) {
     waitForSeq(sourceDb, targetDb);
 
     copy = targetDb.open(newDocs[0]._id);
-    TEquals(null, copy);
+    TIsnull(copy);
     copy = targetDb.open(newDocs[6]._id);
-    TEquals(null, copy);
+    TIsnull(copy);
 
     var changes = targetDb.changes({since: targetInfo.update_seq});
     var line1 = changes.results[changes.results.length - 2];
@@ -1330,7 +1330,7 @@ couchTests.replication = function(debug) {
 
     wait(2000);
     copy = targetDb.open(doc._id);
-    TEquals(null, copy);
+    TIsnull(copy);
   }
 
   // COUCHDB-1093 - filtered and continuous _changes feed dies when the
@@ -1527,7 +1527,7 @@ couchTests.replication = function(debug) {
       copy = targetDb.open(doc._id);
 
       if (doc._id.indexOf("_design/") === 0) {
-        TEquals(null, copy);
+        TIsnull(copy);
       } else {
         T(copy !== null);
         TEquals(true, compareObjects(doc, copy));
@@ -1592,7 +1592,7 @@ couchTests.replication = function(debug) {
     for (j = 0; j < docs.length; j++) {
       doc = docs[j];
       copy = targetDb.open(doc._id);
-      TEquals(null, copy);
+      TIsnull(copy);
     }
   }
 
@@ -1721,7 +1721,7 @@ couchTests.replication = function(debug) {
       repId = tasks[j].replication_id;
     }
   }
-  TEquals(null, repId, "Replication was canceled");
+  TIsnull(repId, "Replication was canceled");
 
   xhr = CouchDB.request(
     "POST", "/_replicate", {

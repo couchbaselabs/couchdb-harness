@@ -41,33 +41,33 @@ couchTests.view_include_docs = function(debug) {
   T(db.save(designDoc).ok);
 
   var resp = db.view('test/all_docs', {include_docs: true, limit: 2});
-  T(resp.rows.length == 2);
-  T(resp.rows[0].id == "0");
-  T(resp.rows[0].doc._id == "0");
-  T(resp.rows[1].id == "1");
-  T(resp.rows[1].doc._id == "1");
+  TEquals(2, resp.rows.length)
+  TEquals("0", resp.rows[0].id)
+  TEquals("0", resp.rows[0].doc._id)
+  TEquals("1", resp.rows[1].id)
+  TEquals("1", resp.rows[1].doc._id)
 
   resp = db.view('test/all_docs', {include_docs: true}, [29, 74]);
-  T(resp.rows.length == 2);
-  T(resp.rows[0].doc._id == "29");
-  T(resp.rows[1].doc.integer == 74);
+  TEquals(2, resp.rows.length)
+  TEquals("29", resp.rows[0].doc._id)
+  TEquals(74, resp.rows[1].doc.integer)
 
   resp = db.allDocs({limit: 2, skip: 1, include_docs: true});
-  T(resp.rows.length == 2);
-  T(resp.rows[0].doc.integer == 1);
-  T(resp.rows[1].doc.integer == 10);
+  TEquals(2, resp.rows.length)
+  TEquals(1, resp.rows[0].doc.integer)
+  TEquals(10, resp.rows[1].doc.integer)
 
   resp = db.allDocs({include_docs: true}, ['not_a_doc']);
-  T(resp.rows.length == 1);
+  TEquals(1, resp.rows.length)
   T(!resp.rows[0].doc);
 
   resp = db.allDocs({include_docs: true}, ["1", "foo"]);
-  T(resp.rows.length == 2);
-  T(resp.rows[0].doc.integer == 1);
+  TEquals(2, resp.rows.length)
+  TEquals(1, resp.rows[0].doc.integer)
   T(!resp.rows[1].doc);
 
   resp = db.allDocs({include_docs: true, limit: 0});
-  T(resp.rows.length == 0);
+  TEquals(0, resp.rows.length)
 
   // No reduce support
   try {
@@ -75,17 +75,17 @@ couchTests.view_include_docs = function(debug) {
       alert(JSON.stringify(resp));
       T(0==1);
   } catch (e) {
-      T(e.error == 'query_parse_error');
+      TEquals('query_parse_error', e.error)
   }
 
   // Reduce support when reduce=false
   resp = db.view('test/summate', {reduce: false, include_docs: true});
-  T(resp.rows.length == 100);
+  TEquals(100, resp.rows.length)
 
   // Not an error with include_docs=false&reduce=true
   resp = db.view('test/summate', {reduce: true, include_docs: false});
-  T(resp.rows.length == 1);
-  T(resp.rows[0].value == 4950);
+  TEquals(1, resp.rows.length)
+  TEquals(4950, resp.rows[0].value)
 
   T(db.save({
     "_id": "link-to-10",
@@ -94,13 +94,13 @@ couchTests.view_include_docs = function(debug) {
   
   // you can link to another doc from a value.
   resp = db.view("test/with_id", {key:"link-to-10"});
-  T(resp.rows[0].key == "link-to-10");
-  T(resp.rows[0].value["_id"] == "10");
+  TEquals("link-to-10", resp.rows[0].key)
+  TEquals("10", resp.rows[0].value["_id"])
   
   resp = db.view("test/with_id", {key:"link-to-10",include_docs: true});
-  T(resp.rows[0].key == "link-to-10");
-  T(resp.rows[0].value["_id"] == "10");
-  T(resp.rows[0].doc._id == "10");
+  TEquals("link-to-10", resp.rows[0].key)
+  TEquals("10", resp.rows[0].value["_id"])
+  TEquals("10", resp.rows[0].doc._id)
 
   // Check emitted _rev controls things
   resp = db.allDocs({include_docs: true}, ["0"]);
@@ -119,22 +119,22 @@ couchTests.view_include_docs = function(debug) {
 
   // should emit the previous revision
   resp = db.view("test/with_prev", {include_docs: true}, ["0"]);
-  T(resp.rows[0].doc._id == "0");
-  T(resp.rows[0].doc._rev == before._rev);
+  TEquals("0", resp.rows[0].doc._id)
+  TEquals(before._rev, resp.rows[0].doc._rev)
   T(!resp.rows[0].doc.prev);
-  T(resp.rows[0].doc.integer == 0);
+  TEquals(0, resp.rows[0].doc.integer)
 
   var xhr = CouchDB.request("POST", "/test_suite_db/_compact");
   T(xhr.status == 202)
   while (db.info().compact_running) {}
 
   resp = db.view("test/with_prev", {include_docs: true}, ["0", "23"]);
-  T(resp.rows.length == 2);
-  T(resp.rows[0].key == "0");
-  T(resp.rows[0].id == "0");
+  TEquals(2, resp.rows.length)
+  TEquals("0", resp.rows[0].key)
+  TEquals("0", resp.rows[0].id)
   T(!resp.rows[0].doc);
-  T(resp.rows[0].doc == null);
-  T(resp.rows[1].doc.integer == 23);
+  TIsnull(resp.rows[0].doc)
+  TEquals(23, resp.rows[1].doc.integer)
 
   // COUCHDB-549 - include_docs=true with conflicts=true
 
