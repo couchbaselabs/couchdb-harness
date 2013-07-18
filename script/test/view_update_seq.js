@@ -28,11 +28,11 @@ couchTests.view_update_seq = function(debug) {
     language: "javascript",
     views: {
       all_docs: {
-        map: "function(doc) { emit(doc.integer, doc.string) }"
+        map: "function(doc) { emit(doc.integer, doc.string); }"
       },
       summate: {
-        map:"function (doc) {emit(doc.integer, doc.integer)};",
-        reduce:"function (keys, values) { return sum(values); };"
+        map:"function (doc) {emit(doc.integer, doc.integer); }",
+        reduce:"function (keys, values) { return sum(values); }"
       }
     }
   };

@@ -26,6 +26,7 @@ module.exports = {
       'script/json2.js',
       'script/sha1.js',
       'script/oauth.js',
+      'script/base64.js',
       'script/couch.js',
       'script/couch_test_runner.js',
       'script/couch_tests.js'

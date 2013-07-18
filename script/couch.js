@@ -461,13 +461,15 @@ CouchDB.newUuids = function(n, buf) {
 };
 
 CouchDB.maybeThrowError = function(req) {
+  var result
   if (req.status >= 400) {
     try {
-      var result = JSON.parse(req.responseText);
+      result = JSON.parse(req.responseText);
+      result.status = req.status;
     } catch (ParseError) {
-      var result = {error:"unknown", reason:req.responseText};
     }
-
+    if (!result)
+      result = {error:"unknown", reason:req.responseText, status:req.status};
     throw (new CouchError(result));
   }
 }
@@ -505,7 +507,10 @@ if (typeof window == 'undefined' || !window) {
 
 // Turns an {error: ..., reason: ...} response into an Error instance
 function CouchError(error) {
-  var inst = new Error(error.reason);
+  var message = error.reason || error.error || 'CouchError'
+  if (error.status)
+    message = String(error.status)+" "+message;
+  var inst = new Error(message);
   inst.name = 'CouchError';
   inst.error = error.error;
   inst.reason = error.reason;
