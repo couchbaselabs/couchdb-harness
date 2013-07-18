@@ -36,36 +36,38 @@ couchTests.attachment_paths = function(debug) {
     };
 
     T(db.save(binAttDoc).ok);
+    
+    var acceptAll = {headers: {Accept: "*/*"}};
 
-    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo/bar.txt");
-    T(xhr.responseText == "This is a base64 encoded text");
-    T(xhr.getResponseHeader("Content-Type") == "text/plain");
+    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo/bar.txt", acceptAll);
+    TEquals("This is a base64 encoded text", xhr.responseText);
+    TEquals("text/plain", xhr.getResponseHeader("Content-Type"));
 
     // lets try it with an escaped attachment id...
     // weird that it's at two urls
-    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo%2Fbar.txt");
-    T(xhr.status == 200);
+    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo%2Fbar.txt", acceptAll);
+    TEquals(200, xhr.status )
     // xhr.responseText == "This is a base64 encoded text"
 
-    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo/baz.txt");
-    T(xhr.status == 404);
+    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo/baz.txt", acceptAll);
+    TEquals(404, xhr.status )
 
-    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo%252Fbaz.txt");
-    T(xhr.status == 200);
-    T(xhr.responseText == "We like percent two F.");
+    var xhr = CouchDB.request("GET", "/"+dbName+"/bin_doc/foo%252Fbaz.txt", acceptAll);
+    TEquals(200, xhr.status )
+    TEquals("We like percent two F.", xhr.responseText )
 
     // require a _rev to PUT
     var xhr = CouchDB.request("PUT", "/"+dbName+"/bin_doc/foo/attachment.txt", {
       headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:"Just some text"
     });
-    T(xhr.status == 409);
+    TEquals(409, xhr.status )
 
     var xhr = CouchDB.request("PUT", "/"+dbName+"/bin_doc/foo/bar2.txt?rev=" + binAttDoc._rev, {
       body:"This is no base64 encoded text",
       headers:{"Content-Type": "text/plain;charset=utf-8"}
     });
-    T(xhr.status == 201);
+    TEquals(201, xhr.status )
     var rev = JSON.parse(xhr.responseText).rev;
 
     binAttDoc = db.open("bin_doc");
@@ -77,7 +79,7 @@ couchTests.attachment_paths = function(debug) {
       binAttDoc._attachments["foo/bar2.txt"].content_type.toLowerCase(),
       "correct content-type"
     );
-    T(binAttDoc._attachments["foo/bar2.txt"].length == 30);
+    TEquals(30, binAttDoc._attachments["foo/bar2.txt"].length)
 
     //// now repeat the while thing with a design doc
 
@@ -99,45 +101,45 @@ couchTests.attachment_paths = function(debug) {
 
     T(db.save(binAttDoc).ok);
 
-    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo/bar.txt");
-    T(xhr.responseText == "This is a base64 encoded text");
-    T(xhr.getResponseHeader("Content-Type") == "text/plain");
+    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo/bar.txt", acceptAll);
+    TEquals("This is a base64 encoded text", xhr.responseText)
+    TEquals("text/plain", xhr.getResponseHeader("Content-Type"))
 
     // lets try it with an escaped attachment id...
     // weird that it's at two urls
-    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo%2Fbar.txt");
-    T(xhr.responseText == "This is a base64 encoded text");
-    T(xhr.status == 200);
+    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo%2Fbar.txt", acceptAll);
+    TEquals("This is a base64 encoded text", xhr.responseText)
+    TEquals(200, xhr.status)
 
     // err, 3 urls
-    var xhr = CouchDB.request("GET", "/"+dbName+"/_design/bin_doc/foo%2Fbar.txt");
-    T(xhr.responseText == "This is a base64 encoded text");
-    T(xhr.status == 200);
+    var xhr = CouchDB.request("GET", "/"+dbName+"/_design/bin_doc/foo%2Fbar.txt", acceptAll);
+    TEquals("This is a base64 encoded text", xhr.responseText)
+    TEquals(200, xhr.status)
 
     // I mean um, 4 urls
-    var xhr = CouchDB.request("GET", "/"+dbName+"/_design/bin_doc/foo/bar.txt");
-    T(xhr.responseText == "This is a base64 encoded text");
-    T(xhr.status == 200);
+    var xhr = CouchDB.request("GET", "/"+dbName+"/_design/bin_doc/foo/bar.txt", acceptAll);
+    TEquals("This is a base64 encoded text", xhr.responseText)
+    TEquals(200, xhr.status)
 
-    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo/baz.txt");
-    T(xhr.status == 404);
+    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo/baz.txt", acceptAll);
+    TEquals(404, xhr.status)
 
-    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo%252Fbaz.txt");
-    T(xhr.status == 200);
-    T(xhr.responseText == "We like percent two F.");
+    var xhr = CouchDB.request("GET", "/"+dbName+"/_design%2Fbin_doc/foo%252Fbaz.txt", acceptAll);
+    TEquals(200, xhr.status)
+    TEquals("We like percent two F.", xhr.responseText)
 
     // require a _rev to PUT
     var xhr = CouchDB.request("PUT", "/"+dbName+"/_design%2Fbin_doc/foo/attachment.txt", {
       headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:"Just some text"
     });
-    T(xhr.status == 409);
+    TEquals(409, xhr.status)
 
     var xhr = CouchDB.request("PUT", "/"+dbName+"/_design%2Fbin_doc/foo/bar2.txt?rev=" + binAttDoc._rev, {
       body:"This is no base64 encoded text",
       headers:{"Content-Type": "text/plain;charset=utf-8"}
     });
-    T(xhr.status == 201);
+    TEquals(201, xhr.status)
     var rev = JSON.parse(xhr.responseText).rev;
 
     binAttDoc = db.open("_design/bin_doc");
@@ -148,6 +150,6 @@ couchTests.attachment_paths = function(debug) {
       binAttDoc._attachments["foo/bar2.txt"].content_type.toLowerCase(),
       "correct content-type"
     );
-    T(binAttDoc._attachments["foo/bar2.txt"].length == 30);
+    TEquals(30, binAttDoc._attachments["foo/bar2.txt"].length)
   }
 };
