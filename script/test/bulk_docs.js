@@ -21,9 +21,9 @@ couchTests.bulk_docs = function(debug) {
   // Create the docs
   var results = db.bulkSave(docs);
 
-  TEquals(5, results.length)
+  T(results.length == 5);
   for (var i = 0; i < 5; i++) {
-    TEquals(docs[i]._id, results[i].id)
+    T(results[i].id == docs[i]._id);
     T(results[i].rev);
     // Update the doc
     docs[i].string = docs[i].string + ".00";
@@ -31,9 +31,9 @@ couchTests.bulk_docs = function(debug) {
 
   // Save the docs
   results = db.bulkSave(docs);
-  TEquals(5, results.length)
+  T(results.length == 5);
   for (i = 0; i < 5; i++) {
-    TEquals(i.toString(), results[i].id)
+    T(results[i].id == i.toString());
 
     // set the delete flag to delete the docs in the next step
     docs[i]._deleted = true;
@@ -48,16 +48,16 @@ couchTests.bulk_docs = function(debug) {
   results = db.bulkSave(docs);
 
   // doc "0" should be a conflict
-  TEquals(5, results.length)
-  TEquals("0", results[0].id)
-  TEquals("conflict", results[0].error)
+  T(results.length == 5);
+  T(results[0].id == "0");
+  T(results[0].error == "conflict");
   T(typeof results[0].rev === "undefined"); // no rev member when a conflict
 
   // but the rest are not
   for (i = 1; i < 5; i++) {
-    TEquals(i.toString(), results[i].id)
+    T(results[i].id == i.toString());
     T(results[i].rev);
-    TIsnull(db.open(docs[i]._id))
+    T(db.open(docs[i]._id) == null);
   }
 
   // now force a conflict to to save
@@ -104,10 +104,10 @@ couchTests.bulk_docs = function(debug) {
     body: JSON.stringify({"doc": [{"foo":"bar"}]})
   });
 
-  TEquals(400 , req.status)
+  T(req.status == 400 );
   result = JSON.parse(req.responseText);
-  // TEquals("bad_request", result.error)
-  // TEquals("Missing JSON list of 'docs'", result.reason)
+  T(result.error == "bad_request");
+  T(result.reason == "Missing JSON list of 'docs'");
 
   // jira-911
   db.deleteDb();
@@ -118,7 +118,7 @@ couchTests.bulk_docs = function(debug) {
   docs.push({"_id":"1", "a" : 2});
   docs.push({"_id":"3", "a" : 3});
   results = db.bulkSave(docs);
-  TEquals("1", results[1].id)
-  TEquals(undefined, results[1].error)
-  TEquals("conflict", results[2].error)
+  T(results[1].id == "1");
+  T(results[1].error == undefined);
+  T(results[2].error == "conflict");
 };

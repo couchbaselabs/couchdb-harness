@@ -118,7 +118,7 @@ couchTests.users_db_security = function(debug) {
 
       // anonymous should not be able to read an existing user's user document
       var res = usersDb.open("org.couchdb.user:jchris");
-      TIsnull(res, "anonymous user doc read should be not found");
+      TEquals(null, res, "anonymous user doc read should be not found");
 
       // anonymous should not be able to read /_users/_changes
       try {
@@ -151,6 +151,63 @@ couchTests.users_db_security = function(debug) {
       TEquals(true, userDoc.derived_key != jchrisDoc.derived_key,
         "should have new derived_key");
 
+      // SHA-1 password hashes are upgraded to PBKDF2 on successful
+      // authentication
+      var rnewsonDoc = {
+        _id: "org.couchdb.user:rnewson",
+        type: "user",
+        name: "rnewson",
+        // password: "plaintext_password",
+        password_sha: "e29dc3aeed5abf43185c33e479f8998558c59474",
+        salt: "24f1e0a87c2e374212bda1073107e8ae",
+        roles: []
+      };
+
+      var password_sha = rnewsonDoc.password_sha,
+        salt = rnewsonDoc.salt,
+        derived_key,
+        iterations;
+
+      usersDb.save(rnewsonDoc);
+      rnewsonDoc = open_as(usersDb, rnewsonDoc._id, "jan");
+      T(!rnewsonDoc.password_scheme);
+      T(!rnewsonDoc.derived_key);
+      T(!rnewsonDoc.iterations);
+
+      // check that we don't upgrade when the password is wrong
+      TEquals("unauthorized", CouchDB.login("rnewson", "wrong_password").error);
+      rnewsonDoc = open_as(usersDb, rnewsonDoc._id, "jan");
+      TEquals(salt, rnewsonDoc.salt);
+      TEquals(password_sha, rnewsonDoc.password_sha);
+      T(!rnewsonDoc.password_scheme);
+      T(!rnewsonDoc.derived_key);
+      T(!rnewsonDoc.iterations);
+
+      TEquals(true, CouchDB.login("rnewson", "plaintext_password").ok);
+      rnewsonDoc = usersDb.open(rnewsonDoc._id);
+      TEquals("pbkdf2", rnewsonDoc.password_scheme);
+      T(rnewsonDoc.salt != salt);
+      T(!rnewsonDoc.password_sha);
+      T(rnewsonDoc.derived_key);
+      T(rnewsonDoc.iterations);
+
+      salt = rnewsonDoc.salt,
+      derived_key = rnewsonDoc.derived_key,
+      iterations = rnewsonDoc.iterations;
+
+      // check that authentication is still working
+      // and everything is staying the same now
+      CouchDB.logout();
+      TEquals(true, CouchDB.login("rnewson", "plaintext_password").ok);
+      rnewsonDoc = usersDb.open(rnewsonDoc._id);
+      TEquals("pbkdf2", rnewsonDoc.password_scheme);
+      TEquals(salt, rnewsonDoc.salt);
+      T(!rnewsonDoc.password_sha);
+      TEquals(derived_key, rnewsonDoc.derived_key);
+      TEquals(iterations, rnewsonDoc.iterations);
+
+      CouchDB.logout();
+
       // user should not be able to read another user's user document
       var fdmananaDoc = {
         _id: "org.couchdb.user:fdmanana",
@@ -164,11 +221,11 @@ couchTests.users_db_security = function(debug) {
 
       var fdmananaDocAsReadByjchris =
         open_as(usersDb, "org.couchdb.user:fdmanana", "jchris1");
-      TIsnull(fdmananaDocAsReadByjchris,
+      TEquals(null, fdmananaDocAsReadByjchris,
         "should not_found opening another user's user doc");
 
 
-      // save a db amin 
+      // save a db admin
       var benoitcDoc = {
         _id: "org.couchdb.user:benoitc",
         type: "user",
@@ -209,11 +266,11 @@ couchTests.users_db_security = function(debug) {
 
       // admin should be able to read from any view
       var result = view_as(usersDb, "user_db_auth/test", "jan");
-      TEquals(3, result.total_rows, "should allow access and list two users to admin");
+      TEquals(4, result.total_rows, "should allow access and list four users to admin");
 
       // db admin should be able to read from any view
       var result = view_as(usersDb, "user_db_auth/test", "benoitc");
-      TEquals(3, result.total_rows, "should allow access and list two users to db admin");
+      TEquals(4, result.total_rows, "should allow access and list four users to db admin");
 
 
       // non-admins can't read design docs
@@ -252,6 +309,102 @@ couchTests.users_db_security = function(debug) {
       var robertDoc = CouchDB.prepareUserDoc({ name: "robert" }, "anchovy");
       var result = usersDb.save(robertDoc);
       TEquals(true, result.ok, "old-style user docs should still be accepted");
+
+      // log in one last time so run_on_modified_server can clean up the admin account
+      TEquals(true, CouchDB.login("jan", "apple").ok);
+    });
+
+    run_on_modified_server([
+        {
+          section: "couch_httpd_auth",
+          key: "iterations",
+          value: "1"
+        },
+        {
+          section: "couch_httpd_auth",
+          key: "public_fields",
+          value: "name,type"
+        },
+        {
+          section: "couch_httpd_auth",
+          key: "users_db_public",
+          value: "true"
+        },
+        {
+          section: "admins",
+          key: "jan",
+          value: "apple"
+        }
+      ], function() {
+        var res = usersDb.open("org.couchdb.user:jchris");
+        TEquals("jchris", res.name);
+        TEquals("user", res.type);
+        TEquals(undefined, res.roles);
+        TEquals(undefined, res.salt);
+        TEquals(undefined, res.password_scheme);
+        TEquals(undefined, res.derived_key);
+
+        TEquals(true, CouchDB.login("jchris", "couch").ok);
+
+        var all = usersDb.allDocs({ include_docs: true });
+        T(all.rows);
+        if (all.rows) {
+          T(all.rows.every(function(row) {
+            if (row.doc) {
+              return Object.keys(row.doc).every(function(key) {
+                return key === 'name' || key === 'type';
+              });
+            } else {
+              if(row.id[0] == "_") {
+                // ignore design docs
+                return true
+              } else {
+                return false;
+              }
+            }
+          }));
+        }
+      // log in one last time so run_on_modified_server can clean up the admin account
+      TEquals(true, CouchDB.login("jan", "apple").ok);
+    });
+
+    run_on_modified_server([
+      {
+        section: "couch_httpd_auth",
+        key: "iterations",
+        value: "1"
+      },
+      {
+        section: "couch_httpd_auth",
+        key: "public_fields",
+        value: "name"
+      },
+      {
+        section: "couch_httpd_auth",
+        key: "users_db_public",
+        value: "false"
+      },
+      {
+        section: "admins",
+        key: "jan",
+        value: "apple"
+      }
+    ], function() {
+      TEquals(true, CouchDB.login("jchris", "couch").ok);
+
+      try {
+        var all = usersDb.allDocs({ include_docs: true });
+        T(false); // should never hit
+      } catch(e) {
+        TEquals("forbidden", e.error, "should throw");
+      }
+
+      // COUCHDB-1888 make sure admins always get all fields
+      TEquals(true, CouchDB.login("jan", "apple").ok);
+      var all_admin = usersDb.allDocs({ include_docs: "true" });
+      TEquals("user", all_admin.rows[2].doc.type,
+          "should return type");
+
 
       // log in one last time so run_on_modified_server can clean up the admin account
       TEquals(true, CouchDB.login("jan", "apple").ok);

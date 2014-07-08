@@ -27,7 +27,7 @@ couchTests.all_docs = function(debug) {
   var results = db.allDocs();
   var rows = results.rows;
 
-  TEquals(results.rows.length, results.total_rows)
+  T(results.total_rows == results.rows.length);
 
   for(var i=0; i < rows.length; i++) {
     T(rows[i].id >= "0" && rows[i].id <= "4");
@@ -35,12 +35,11 @@ couchTests.all_docs = function(debug) {
 
   // Check _all_docs with descending=true
   var desc = db.allDocs({descending:true});
-  TEquals(desc.rows.length, desc.total_rows)
+  T(desc.total_rows == desc.rows.length);
 
   // Check _all_docs offset
-  // https://github.com/daleharvey/pouchdb/pull/527#issuecomment-15471668
-  // var all = db.allDocs({startkey:"2"});
-  // TEquals(2, all.offset)
+  var all = db.allDocs({startkey:"2"});
+  T(all.offset == 2);
 
   // Confirm that queries may assume raw collation.
   var raw = db.allDocs({ startkey: "org.couchdb.user:",
@@ -57,12 +56,12 @@ couchTests.all_docs = function(debug) {
   };
 
   // it should work in reverse as well
-  // changes = db.changes({descending:true});
-  // ids = ["2","1","3","0"];
-  // for (var i=0; i < changes.results.length; i++) {
-  //   var row = changes.results[i];
-  //   T(row.id == ids[i], "descending=true");
-  // };
+  changes = db.changes({descending:true});
+  ids = ["2","1","3","0"];
+  for (var i=0; i < changes.results.length; i++) {
+    var row = changes.results[i];
+    T(row.id == ids[i], "descending=true");
+  };
 
   // check that deletions also show up right
   var doc1 = db.open("1");
@@ -70,8 +69,8 @@ couchTests.all_docs = function(debug) {
   T(deleted.ok);
   changes = db.changes();
   // the deletion should make doc id 1 have the last seq num
-  TEquals(4, changes.results.length)
-  TEquals("1", changes.results[3].id)
+  T(changes.results.length == 4);
+  T(changes.results[3].id == "1");
   T(changes.results[3].deleted);
 
   // do an update
@@ -81,14 +80,14 @@ couchTests.all_docs = function(debug) {
   changes = db.changes();
 
   // the update should make doc id 3 have the last seq num
-  TEquals(4, changes.results.length)
-  TEquals("3", changes.results[3].id)
+  T(changes.results.length == 4);
+  T(changes.results[3].id == "3");
 
   // ok now lets see what happens with include docs
   changes = db.changes({include_docs: true});
-  TEquals(4, changes.results.length)
-  TEquals("3", changes.results[3].id)
-  TEquals("totally", changes.results[3].doc.updated)
+  T(changes.results.length == 4);
+  T(changes.results[3].id == "3");
+  T(changes.results[3].doc.updated == "totally");
 
   T(changes.results[2].doc);
   T(changes.results[2].doc._deleted);
@@ -98,7 +97,7 @@ couchTests.all_docs = function(debug) {
   TEquals("1", rows[0].key);
   TEquals("1", rows[0].id);
   TEquals(true, rows[0].value.deleted);
-  // TIsnull(rows[0].doc);
+  TEquals(null, rows[0].doc);
 
   // add conflicts
   var conflictDoc1 = {
@@ -115,8 +114,7 @@ couchTests.all_docs = function(debug) {
   changes = db.changes({include_docs: true, conflicts: true, style: "all_docs"});
   TEquals("3", changes.results[3].id);
   TEquals(3, changes.results[3].changes.length);
-  // TODO: https://github.com/daleharvey/pouchdb/issues/677
-  // TEquals(winRev._rev, changes.results[3].changes[0].rev);
+  TEquals(winRev._rev, changes.results[3].changes[0].rev);
   TEquals("3", changes.results[3].doc._id);
   TEquals(winRev._rev, changes.results[3].doc._rev);
   TEquals(true, changes.results[3].doc._conflicts instanceof Array);
@@ -137,7 +135,7 @@ couchTests.all_docs = function(debug) {
   db.save({_id: "a", foo: "a"});
 
   var rows = db.allDocs({startkey: "Z", endkey: "Z"}).rows;
-  TEquals(1, rows.length)
+  T(rows.length == 1);
 
   // cleanup
   db.deleteDb();

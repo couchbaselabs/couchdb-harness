@@ -182,6 +182,10 @@ couchTests.rewrite = function(debug) {
             {
               "from": "/",
               "to": "_view/basicView",
+            },
+            {
+              "from": "/db/*",
+              "to": "../../*"
             }
           ],
           lists: {
@@ -289,12 +293,12 @@ couchTests.rewrite = function(debug) {
         // test simple rewriting
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/foo");
-        TEquals("This is a base64 encoded text", req.responseText)
-        TEquals("text/plain", req.getResponseHeader("Content-Type"))
+        T(req.responseText == "This is a base64 encoded text");
+        T(req.getResponseHeader("Content-Type") == "text/plain");
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/foo2");
-        TEquals("This is a base64 encoded text", req.responseText)
-        TEquals("text/plain", req.getResponseHeader("Content-Type"))
+        T(req.responseText == "This is a base64 encoded text");
+        T(req.getResponseHeader("Content-Type") == "text/plain");
         
         
         // test POST
@@ -306,42 +310,42 @@ couchTests.rewrite = function(debug) {
         var docid = resp.id;
         
         xhr = CouchDB.request("PUT", "/"+dbName+"/_design/test/_rewrite/hello/"+docid);
-        TEquals(201, xhr.status)
-        TEquals("hello doc", xhr.responseText)
+        T(xhr.status == 201);
+        T(xhr.responseText == "hello doc");
         T(/charset=utf-8/.test(xhr.getResponseHeader("Content-Type")))
         
         doc = db.open(docid);
-        TEquals("hello", doc.world)
+        T(doc.world == "hello");
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome?name=user");
-        TEquals("Welcome user", req.responseText)
+        T(req.responseText == "Welcome user");
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome/user");
-        TEquals("Welcome user", req.responseText)
+        T(req.responseText == "Welcome user");
         
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome2");
-        TEquals("Welcome user", req.responseText)
+        T(req.responseText == "Welcome user");
         
         xhr = CouchDB.request("PUT", "/"+dbName+"/_design/test/_rewrite/welcome3/test");
-        TEquals(201, xhr.status)
-        TEquals("New World", xhr.responseText)
+        T(xhr.status == 201);
+        T(xhr.responseText == "New World");
         T(/charset=utf-8/.test(xhr.getResponseHeader("Content-Type")));
         
         xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome3/test");
-        TEquals("Welcome test", xhr.responseText)
+        T(xhr.responseText == "Welcome test");
 
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome4/user");
-        TEquals("Welcome user", req.responseText)
+        T(req.responseText == "Welcome user");
 
         req = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/welcome5/welcome3");
-        TEquals("Welcome welcome3", req.responseText)
+        T(req.responseText == "Welcome welcome3");
         
         xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/basicView");
-        TEquals(200, xhr.status, "view call")
+        T(xhr.status == 200, "view call");
         T(/{"total_rows":9/.test(xhr.responseText)); 
 
         xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/");
-        TEquals(200, xhr.status, "view call")
+        T(xhr.status == 200, "view call");
         T(/{"total_rows":9/.test(xhr.responseText)); 
 
         
@@ -402,6 +406,13 @@ couchTests.rewrite = function(debug) {
         var result = JSON.parse(xhr.responseText);
         T(typeof(result.rows[0].doc) === "object");
         
+        // COUCHDB-2031 - path normalization versus qs params
+        xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/db/_design/test?meta=true");
+        T(xhr.status == 200, "path normalization works with qs params");
+        var result = JSON.parse(xhr.responseText);
+        T(result['_id'] == "_design/test");
+        T(typeof(result['_revs_info']) === "object");
+
         // test path relative to server
         designDoc.rewrites.push({
           "from": "uuids",
@@ -410,9 +421,9 @@ couchTests.rewrite = function(debug) {
         T(db.save(designDoc).ok);
         
         var xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/uuids");
-        TEquals(500, xhr.status)
+        T(xhr.status == 500);
         var result = JSON.parse(xhr.responseText);
-        TEquals("insecure_rewrite_rule", result.error)
+        T(result.error == "insecure_rewrite_rule");
 
         run_on_modified_server(
           [{section: "httpd",
@@ -420,9 +431,9 @@ couchTests.rewrite = function(debug) {
             value: "false"}],
           function() {
             var xhr = CouchDB.request("GET", "/"+dbName+"/_design/test/_rewrite/uuids?cache=bust");
-            TEquals(200, xhr.status)
+            T(xhr.status == 200);
             var result = JSON.parse(xhr.responseText);
-            TEquals(1, result.uuids.length)
+            T(result.uuids.length == 1);
             var first = result.uuids[0];
           });
       });

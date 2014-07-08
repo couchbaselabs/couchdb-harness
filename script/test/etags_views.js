@@ -57,19 +57,19 @@ couchTests.etags_views = function(debug) {
 
   // verify get w/Etag on map view
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/basicView");
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
   var etag = xhr.getResponseHeader("etag");
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/basicView", {
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // verify ETag doesn't change when an update
   // doesn't change the view group's index
   T(db.save({"_id":"doc1", "foo":"bar"}).ok);
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/basicView");
   var etag1 = xhr.getResponseHeader("etag");
-  TEquals(etag, etag1)
+  T(etag1 == etag);
 
   // verify ETag always changes for include_docs=true on update
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/basicView?include_docs=true");
@@ -93,7 +93,7 @@ couchTests.etags_views = function(debug) {
   // Test that _purge didn't affect the other view etags.
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/basicView");
   var etag1 = xhr.getResponseHeader("etag");
-  TEquals(etag, etag1)
+  T(etag1 == etag);
 
   // verify different views in the same view group may have different ETags
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/fooView");
@@ -112,23 +112,23 @@ couchTests.etags_views = function(debug) {
   restartServer();
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/basicView");
   var etag2 = xhr.getResponseHeader("etag");
-  TEquals(etag2, etag1)
+  T(etag1 == etag2);
 
   // reduce view
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/withReduce");
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
   var etag = xhr.getResponseHeader("etag");
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/withReduce",{
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // verify ETag doesn't change when an update
   // doesn't change the view group's index
   T(db.save({"_id":"doc3", "foo":"bar"}).ok);
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/withReduce");
   var etag1 = xhr.getResponseHeader("etag");
-  TEquals(etag, etag1)
+  T(etag1 == etag);
   // purge
   var doc3 = db.open("doc3");
   xhr = CouchDB.request("POST", "/test_suite_db/_purge", {
@@ -136,7 +136,7 @@ couchTests.etags_views = function(debug) {
   });
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/withReduce");
   var etag1 = xhr.getResponseHeader("etag");
-  TEquals(etag, etag1)
+  T(etag1 == etag);
 
   // verify different views in the same view group may have different ETags
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/fooView");
@@ -155,7 +155,7 @@ couchTests.etags_views = function(debug) {
   restartServer();
   xhr = CouchDB.request("GET", "/test_suite_db/_design/etags/_view/withReduce");
   var etag2 = xhr.getResponseHeader("etag");
-  TEquals(etag2, etag1)
+  T(etag1 == etag2);
 
   // confirm ETag changes with different POST bodies
   xhr = CouchDB.request("POST", "/test_suite_db/_design/etags/_view/basicView",
@@ -182,21 +182,21 @@ couchTests.etags_views = function(debug) {
   
   // all docs
   xhr = CouchDB.request("GET", "/test_suite_db/_all_docs");
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
   var etag = xhr.getResponseHeader("etag");
   xhr = CouchDB.request("GET", "/test_suite_db/_all_docs", {
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // _changes
   xhr = CouchDB.request("GET", "/test_suite_db/_changes");
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
   var etag = xhr.getResponseHeader("etag");
   xhr = CouchDB.request("GET", "/test_suite_db/_changes", {
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // list etag
   // in the list test for now
@@ -215,6 +215,6 @@ couchTests.etags_views = function(debug) {
   T(etag != new_etag);
   // but still be cacheable
   xhr = CouchDB.request("GET", "/test_suite_db/_all_docs"); 
-  TEquals(xhr.getResponseHeader("etag"), new_etag)
+  T(new_etag == xhr.getResponseHeader("etag"));
   
 };

@@ -90,27 +90,27 @@ couchTests.view_collation = function(debug) {
   // the inclusive_end=true functionality is limited to endkey currently
   // if you need inclusive_start=false for startkey, please do implement. ;)
   var rows = db.query(queryFun, null, {endkey : "b", inclusive_end:true}).rows;
-  TEquals("b", rows[rows.length-1].key)
+  T(rows[rows.length-1].key == "b");
   // descending=true
   var rows = db.query(queryFun, null, {endkey : "b",
     descending:true, inclusive_end:true}).rows;
-  TEquals("b", rows[rows.length-1].key)
+  T(rows[rows.length-1].key == "b");
 
   // test inclusive_end=false
   var rows = db.query(queryFun, null, {endkey : "b", inclusive_end:false}).rows;
-  TEquals("aa", rows[rows.length-1].key)
+  T(rows[rows.length-1].key == "aa");
   // descending=true
   var rows = db.query(queryFun, null, {endkey : "b",
     descending:true, inclusive_end:false}).rows;
-  TEquals("B", rows[rows.length-1].key)
+  T(rows[rows.length-1].key == "B");
   
   var rows = db.query(queryFun, null, {
     endkey : "b", endkey_docid: "10",
     inclusive_end:false}).rows;
-  TEquals("aa", rows[rows.length-1].key)
+  T(rows[rows.length-1].key == "aa");
   
   var rows = db.query(queryFun, null, {
     endkey : "b", endkey_docid: "11",
     inclusive_end:false}).rows;
-  TEquals("b", rows[rows.length-1].key)
+  T(rows[rows.length-1].key == "b");
 };

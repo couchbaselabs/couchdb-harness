@@ -39,12 +39,12 @@ couchTests.conflicts = function(debug) {
     db.save(doc2);  // this should generate a conflict exception
     T("no save conflict 1" && false); // we shouldn't hit here
   } catch (e) {
-    TEquals("conflict", e.error)
+    T(e.error == "conflict");
   }
 
   var changes = db.changes();
 
-  TEquals(1, changes.results.length)
+  T(changes.results.length == 1);
 
   // Now clear out the _rev member and save. This indicates this document is
   // new, not based on an existing revision.
@@ -53,7 +53,7 @@ couchTests.conflicts = function(debug) {
     db.save(doc2); // this should generate a conflict exception
     T("no save conflict 2" && false); // we shouldn't hit here
   } catch (e) {
-    TEquals("conflict", e.error)
+    T(e.error == "conflict");
   }
 
   // Make a few bad requests, specifying conflicting revs
@@ -61,27 +61,27 @@ couchTests.conflicts = function(debug) {
   var xhr = CouchDB.request("PUT", "/test_suite_db/foo?rev=1-foobar", {
     body : JSON.stringify(doc)
   });
-  TEquals(400, xhr.status);
+  T(xhr.status == 400);
 
   // If-Match doesn't match body
   xhr = CouchDB.request("PUT", "/test_suite_db/foo", {
     headers: {"If-Match": "1-foobar"},
     body: JSON.stringify(doc)
   });
-  TEquals(400, xhr.status)
+  T(xhr.status == 400);
 
   // ?rev= doesn't match If-Match
   xhr = CouchDB.request("PUT", "/test_suite_db/foo?rev=1-boobaz", {
     headers: {"If-Match": "1-foobar"},
     body: JSON.stringify(doc2)
   });
-  TEquals(400, xhr.status)
+  T(xhr.status == 400);
 
   // Now update the document using ?rev=
   xhr = CouchDB.request("PUT", "/test_suite_db/foo?rev=" + doc._rev, {
     body: JSON.stringify(doc)
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
 
   // reopen
   var doc = db.open(doc._id);

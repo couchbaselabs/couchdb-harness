@@ -90,20 +90,6 @@ couchTests.list_views = function(debug) {
           // tail
           return '</ul>';
         });
-
-        provides("xml", function() {
-          send('<feed xmlns="http://www.w3.org/2005/Atom">'
-            +'<title>Test XML Feed</title>');
-
-          while (row = getRow()) {
-            var entry = new XML('<entry/>');
-            entry.id = row.id;
-            entry.title = row.key;
-            entry.content = row.value;
-            send(entry);
-          }
-          return "</feed>";
-        });
       }),
       qsParams: stringFun(function(head, req) {
         return toJSON(req.query) + "\n";
@@ -170,6 +156,16 @@ couchTests.list_views = function(debug) {
         });
         send("bad request");
       }),
+      allDocs: stringFun(function(head, req){
+        start({'headers': {'Content-Type': 'application/json'}});
+        var resp = head;
+        var rows = [];
+        while(row=getRow()){
+          rows.push(row);
+        }
+        resp.rows = rows;
+        return toJSON(resp);
+      })
     }
   };
   var viewOnlyDesignDoc = {
@@ -207,7 +203,7 @@ couchTests.list_views = function(debug) {
   db.bulkSave(docs);
 
   var view = db.view('lists/basicView');
-  TEquals(10, view.total_rows)
+  T(view.total_rows == 10);
 
   // standard get
   var xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/basicBasic/basicView");
@@ -224,7 +220,7 @@ couchTests.list_views = function(debug) {
   xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/basicBasic/basicView", {
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
   
   // confirm ETag changes with different POST bodies
   xhr = CouchDB.request("POST", "/test_suite_db/_design/lists/_list/basicBasic/basicView",
@@ -245,7 +241,7 @@ couchTests.list_views = function(debug) {
   TEquals(0, resp.head.offset);
   TEquals(11, resp.head.update_seq);
   
-  TEquals(10, resp.rows.length)
+  T(resp.rows.length == 10);
   TEquals(resp.rows[0], {"id": "0","key": 0,"value": "0"});
 
   TEquals(resp.req.info.db_name, "test_suite_db");
@@ -305,7 +301,7 @@ couchTests.list_views = function(debug) {
   xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/simpleForm/withReduce?group=true", {
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // confirm ETag changes with different POST bodies
   xhr = CouchDB.request("POST", "/test_suite_db/_design/lists/_list/simpleForm/withReduce?group=true",
@@ -357,7 +353,7 @@ couchTests.list_views = function(debug) {
   xhr = CouchDB.request("POST", "/test_suite_db/_design/lists/_list/simpleForm/withReduce?group=false", {
     body: '{"keys":[2,4,5,7]}'
   });
-  TEquals(400, xhr.status)
+  T(xhr.status == 400);
   T(/query_parse_error/.test(xhr.responseText));
 
   var xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/rowError/basicView");
@@ -399,25 +395,15 @@ couchTests.list_views = function(debug) {
       "Accept": 'text/html'
     }
   });
-  TEquals("text/html; charset=utf-8", xhr.getResponseHeader("Content-Type"))
+  T(xhr.getResponseHeader("Content-Type") == "text/html; charset=utf-8");
   T(xhr.responseText.match(/HTML/));
   T(xhr.responseText.match(/Value/));
-
-  // now with xml
-  xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/acceptSwitch/basicView", {
-    headers: {
-      "Accept": 'application/xml'
-    }
-  });
-  TEquals("application/xml", xhr.getResponseHeader("Content-Type"))
-  T(xhr.responseText.match(/XML/));
-  T(xhr.responseText.match(/entry/));
 
   // Test we can run lists and views from separate docs.
   T(db.save(viewOnlyDesignDoc).ok);
   var url = "/test_suite_db/_design/lists/_list/simpleForm/views/basicView" +
                 "?startkey=-3";
-  xhr = CouchDB.request("GET", url); 
+  xhr = CouchDB.request("GET", url);
   T(xhr.status == 200, "multiple design docs.");
   T(!(/Key: -4/.test(xhr.responseText)));
   T(/FirstKey: -3/.test(xhr.responseText));
@@ -439,7 +425,7 @@ couchTests.list_views = function(debug) {
   var xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/secObj/basicView");
   T(xhr.status == 200, "standard get should be 200");
   var resp = JSON.parse(xhr.responseText);
-  TEquals("object", typeof(resp))
+  T(typeof(resp) == "object");
 
   var erlViewTest = function() {
     T(db.save(erlListDoc).ok);
@@ -448,10 +434,10 @@ couchTests.list_views = function(debug) {
     xhr = CouchDB.request("GET", url);
     T(xhr.status == 200, "multiple languages in design docs.");
     var list = JSON.parse(xhr.responseText);
-    TEquals(4, list.length)
+    T(list.length == 4);
     for(var i = 0; i < list.length; i++)
     {
-        TEquals(i, list[i] + 3)
+        T(list[i] + 3 == i);
     }
   };
 
@@ -489,7 +475,18 @@ couchTests.list_views = function(debug) {
 
   // TEST HTTP header response set after getRow() called in _list function.
   var xhr = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/setHeaderAfterGotRow/basicView");
-  TEquals(400, xhr.status)
-  TEquals("MyHeader", xhr.getResponseHeader("X-My-Header"))
+  T(xhr.status == 400);
+  T(xhr.getResponseHeader("X-My-Header") == "MyHeader");
   T(xhr.responseText.match(/^bad request$/));
+
+  // test handling _all_docs by _list functions. the result should be equal
+  var xhr_lAllDocs = CouchDB.request("GET", "/test_suite_db/_design/lists/_list/allDocs/_all_docs");
+  T(xhr_lAllDocs.status == 200, "standard get should be 200");
+  var xhr_allDocs = CouchDB.request("GET", "/test_suite_db/_all_docs");
+  var allDocs = JSON.parse(xhr_allDocs.responseText);
+  var lAllDocs = JSON.parse(xhr_lAllDocs.responseText);
+  TEquals(allDocs.total_rows, lAllDocs.total_rows, "total_rows mismatch");
+  TEquals(allDocs.offset, lAllDocs.offset, "offset mismatch");
+  TEquals(allDocs.rows.length, lAllDocs.rows.length, "amount of rows mismatch");
+  TEquals(allDocs.rows, lAllDocs.rows, "rows mismatch");
 };

@@ -29,12 +29,12 @@ couchTests.view_pagination = function(debug) {
         startkey_docid: i,
         limit: 10
       });
-      TEquals(10, queryResults.rows.length)
-      TEquals(docs.length, queryResults.total_rows)
-      TEquals(i, queryResults.offset)
+      T(queryResults.rows.length == 10);
+      T(queryResults.total_rows == docs.length);
+      T(queryResults.offset == i);
       var j;
       for (j = 0; j < 10;j++) {
-        TEquals(i + j, queryResults.rows[j].key)
+        T(queryResults.rows[j].key == i + j);
       }
 
       // test aliases start_key and start_key_doc_id
@@ -43,11 +43,11 @@ couchTests.view_pagination = function(debug) {
         start_key_doc_id: i,
         limit: 10
       });
-      TEquals(10, queryResults.rows.length)
-      TEquals(docs.length, queryResults.total_rows)
-      TEquals(i, queryResults.offset)
+      T(queryResults.rows.length == 10);
+      T(queryResults.total_rows == docs.length);
+      T(queryResults.offset == i);
       for (j = 0; j < 10;j++) {
-        TEquals(i + j, queryResults.rows[j].key)
+        T(queryResults.rows[j].key == i + j);
       }
     }
 
@@ -59,12 +59,12 @@ couchTests.view_pagination = function(debug) {
         descending: true,
         limit: 10
       });
-      TEquals(10, queryResults.rows.length)
-      TEquals(docs.length, queryResults.total_rows)
-      TEquals(docs.length - i - 1, queryResults.offset)
+      T(queryResults.rows.length == 10);
+      T(queryResults.total_rows == docs.length);
+      T(queryResults.offset == docs.length - i - 1);
       var j;
       for (j = 0; j < 10; j++) {
-        TEquals(i - j, queryResults.rows[j].key)
+        T(queryResults.rows[j].key == i - j);
       }
     }
 
@@ -76,54 +76,54 @@ couchTests.view_pagination = function(debug) {
         descending: false,
         limit: 10
       });
-      TEquals(10, queryResults.rows.length)
-      TEquals(docs.length, queryResults.total_rows)
-      TEquals(i, queryResults.offset)
+      T(queryResults.rows.length == 10);
+      T(queryResults.total_rows == docs.length);
+      T(queryResults.offset == i);
       var j;
       for (j = 0; j < 10;j++) {
-        TEquals(i + j, queryResults.rows[j].key)
+        T(queryResults.rows[j].key == i + j);
       }
     }
 
     function testEndkeyDocId(queryResults) {
-      TEquals(35, queryResults.rows.length)
-      TEquals(docs.length, queryResults.total_rows)
-      TEquals(1, queryResults.offset)
-      TEquals("1", queryResults.rows[0].id)
-      TEquals("10", queryResults.rows[1].id)
-      TEquals("11", queryResults.rows[2].id)
-      TEquals("12", queryResults.rows[3].id)
-      TEquals("13", queryResults.rows[4].id)
-      TEquals("14", queryResults.rows[5].id)
-      TEquals("15", queryResults.rows[6].id)
-      TEquals("16", queryResults.rows[7].id)
-      TEquals("17", queryResults.rows[8].id)
-      TEquals("18", queryResults.rows[9].id)
-      TEquals("19", queryResults.rows[10].id)
-      TEquals("2", queryResults.rows[11].id)
-      TEquals("20", queryResults.rows[12].id)
-      TEquals("21", queryResults.rows[13].id)
-      TEquals("22", queryResults.rows[14].id)
-      TEquals("23", queryResults.rows[15].id)
-      TEquals("24", queryResults.rows[16].id)
-      TEquals("25", queryResults.rows[17].id)
-      TEquals("26", queryResults.rows[18].id)
-      TEquals("27", queryResults.rows[19].id)
-      TEquals("28", queryResults.rows[20].id)
-      TEquals("29", queryResults.rows[21].id)
-      TEquals("3", queryResults.rows[22].id)
-      TEquals("30", queryResults.rows[23].id)
-      TEquals("31", queryResults.rows[24].id)
-      TEquals("32", queryResults.rows[25].id)
-      TEquals("33", queryResults.rows[26].id)
-      TEquals("34", queryResults.rows[27].id)
-      TEquals("35", queryResults.rows[28].id)
-      TEquals("36", queryResults.rows[29].id)
-      TEquals("37", queryResults.rows[30].id)
-      TEquals("38", queryResults.rows[31].id)
-      TEquals("39", queryResults.rows[32].id)
-      TEquals("4", queryResults.rows[33].id)
-      TEquals("40", queryResults.rows[34].id)
+      T(queryResults.rows.length == 35);
+      T(queryResults.total_rows == docs.length);
+      T(queryResults.offset == 1);
+      T(queryResults.rows[0].id == "1");
+      T(queryResults.rows[1].id == "10");
+      T(queryResults.rows[2].id == "11");
+      T(queryResults.rows[3].id == "12");
+      T(queryResults.rows[4].id == "13");
+      T(queryResults.rows[5].id == "14");
+      T(queryResults.rows[6].id == "15");
+      T(queryResults.rows[7].id == "16");
+      T(queryResults.rows[8].id == "17");
+      T(queryResults.rows[9].id == "18");
+      T(queryResults.rows[10].id == "19");
+      T(queryResults.rows[11].id == "2");
+      T(queryResults.rows[12].id == "20");
+      T(queryResults.rows[13].id == "21");
+      T(queryResults.rows[14].id == "22");
+      T(queryResults.rows[15].id == "23");
+      T(queryResults.rows[16].id == "24");
+      T(queryResults.rows[17].id == "25");
+      T(queryResults.rows[18].id == "26");
+      T(queryResults.rows[19].id == "27");
+      T(queryResults.rows[20].id == "28");
+      T(queryResults.rows[21].id == "29");
+      T(queryResults.rows[22].id == "3");
+      T(queryResults.rows[23].id == "30");
+      T(queryResults.rows[24].id == "31");
+      T(queryResults.rows[25].id == "32");
+      T(queryResults.rows[26].id == "33");
+      T(queryResults.rows[27].id == "34");
+      T(queryResults.rows[28].id == "35");
+      T(queryResults.rows[29].id == "36");
+      T(queryResults.rows[30].id == "37");
+      T(queryResults.rows[31].id == "38");
+      T(queryResults.rows[32].id == "39");
+      T(queryResults.rows[33].id == "4");
+      T(queryResults.rows[34].id == "40");
     }
 
     // test endkey_docid

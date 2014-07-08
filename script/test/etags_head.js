@@ -22,27 +22,27 @@ couchTests.etags_head = function(debug) {
   xhr = CouchDB.request("PUT", "/test_suite_db/1", {
     body: "{}"
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
 
   // extract the ETag header values
   var etag = xhr.getResponseHeader("etag");
 
   // get the doc and verify the headers match
   xhr = CouchDB.request("GET", "/test_suite_db/1");
-  TEquals(xhr.getResponseHeader("etag"), etag)
+  T(etag == xhr.getResponseHeader("etag"));
 
   // 'head' the doc and verify the headers match
   xhr = CouchDB.request("HEAD", "/test_suite_db/1", {
     headers: {"if-none-match": "s"}
   });
-  TEquals(xhr.getResponseHeader("etag"), etag)
+  T(etag == xhr.getResponseHeader("etag"));
 
   // replace a doc
   xhr = CouchDB.request("PUT", "/test_suite_db/1", {
     body: "{}",
     headers: {"if-match": etag}
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
 
   // extract the new ETag value
   var etagOld= etag;
@@ -52,27 +52,27 @@ couchTests.etags_head = function(debug) {
   xhr = CouchDB.request("PUT", "/test_suite_db/1", {
     body: "{}"
   });
-  TEquals(409, xhr.status)
+  T(xhr.status == 409);
 
   // verify get w/Etag
   xhr = CouchDB.request("GET", "/test_suite_db/1", {
     headers: {"if-none-match": etagOld}
   });
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
   xhr = CouchDB.request("GET", "/test_suite_db/1", {
     headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // fail to delete a doc
   xhr = CouchDB.request("DELETE", "/test_suite_db/1", {
     headers: {"if-match": etagOld}
   });
-  TEquals(409, xhr.status)
+  T(xhr.status == 409);
 
   //now do it for real
   xhr = CouchDB.request("DELETE", "/test_suite_db/1", {
     headers: {"if-match": etag}
   });
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
 };

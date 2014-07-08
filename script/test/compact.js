@@ -46,18 +46,18 @@ couchTests.compact = function(debug) {
   T(db.setDbProperty("_revs_limit", 666).ok);
 
   T(db.compact().ok);
-  TEquals(202, db.last_req.status)
+  T(db.last_req.status == 202);
   // compaction isn't instantaneous, loop until done
   while (db.info().compact_running) {};
-  TEquals(start_time, db.info().instance_start_time)
+  T(db.info().instance_start_time == start_time);
   T(db.getDbProperty("_revs_limit") === 666);
 
   T(db.ensureFullCommit().ok);
   restartServer();
   var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc/foo.txt");
-  TEquals("This is a base64 encoded text", xhr.responseText)
-  TEquals("text/plain", xhr.getResponseHeader("Content-Type"))
-  TEquals(1, db.info().doc_count)
+  T(xhr.responseText == "This is a base64 encoded text");
+  T(xhr.getResponseHeader("Content-Type") == "text/plain");
+  T(db.info().doc_count == 1);
   T(db.info().disk_size < deletesize);
   TEquals("number", typeof db.info().data_size, "data_size is a number");
   T(db.info().data_size < db.info().disk_size, "data size is < then db file size");
