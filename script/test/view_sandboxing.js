@@ -24,13 +24,13 @@ couchTests.view_sandboxing = function(debug) {
     doc.integer = 2;
     emit(null, doc);
   });
-  TEquals(0, results.total_rows)
+  T(results.total_rows == 0);
 
   var results = db.query(function(doc) {
     doc.array[0] = 0;
     emit(null, doc);
   });
-  TEquals(0, results.total_rows)
+  T(results.total_rows == 0);
 */
   // make sure that a view cannot invoke interpreter internals such as the
   // garbage collector
@@ -38,17 +38,17 @@ couchTests.view_sandboxing = function(debug) {
     gc();
     emit(null, doc);
   });
-  TEquals(0, results.total_rows)
+  T(results.total_rows == 0);
 
   // make sure that a view cannot access the map_funs array defined used by
   // the view server
   var results = db.query(function(doc) { map_funs.push(1); emit(null, doc); });
-  TEquals(0, results.total_rows)
+  T(results.total_rows == 0);
 
   // make sure that a view cannot access the map_results array defined used by
   // the view server
   var results = db.query(function(doc) { map_results.push(1); emit(null, doc); });
-  TEquals(0, results.total_rows)
+  T(results.total_rows == 0);
 
   // test for COUCHDB-925
   // altering 'doc' variable in map function affects other map functions

@@ -34,7 +34,7 @@ couchTests.users_db = function(debug) {
     }, "funnybone");
     T(usersDb.save(jchrisUserDoc).ok);
     
-    TIsnull(CouchDB.session().userCtx.name)
+    T(CouchDB.session().userCtx.name == null);
 
     // test that you can use basic auth aginst the users db
     var s = CouchDB.session({
@@ -43,17 +43,17 @@ couchTests.users_db = function(debug) {
         "Authorization" : "Basic amNocmlzQGFwYWNoZS5vcmc6ZnVubnlib25l"
       }
     });
-    TEquals("jchris@apache.org", s.userCtx.name)
-    TEquals("default", s.info.authenticated)
-    TEquals("test_suite_users", s.info.authentication_db)
+    T(s.userCtx.name == "jchris@apache.org");
+    T(s.info.authenticated == "default");
+    T(s.info.authentication_db == "test_suite_users");
     TEquals(["oauth", "cookie", "default"], s.info.authentication_handlers);
     var s = CouchDB.session({
       headers : {
         "Authorization" : "Basic Xzpf" // name and pass of _:_
       }
     });
-    TEquals(undefined, s.name)
-    TEquals("default", s.info.authenticated)
+    T(s.name == null);
+    T(s.info.authenticated == "default");
     
     
     // ok, now create a conflicting edit on the jchris doc, and make sure there's no login.
@@ -70,7 +70,7 @@ couchTests.users_db = function(debug) {
     var resp = usersDb.bulkSave([jchrisUserDoc],{all_or_nothing : true});
     
     var jchrisWithConflict = usersDb.open(jchrisUserDoc._id, {conflicts : true});
-    TEquals(1, jchrisWithConflict._conflicts.length)
+    T(jchrisWithConflict._conflicts.length == 1);
     
     // no login with conflicted user doc
     try {
@@ -81,13 +81,13 @@ couchTests.users_db = function(debug) {
       });
       T(false && "this will throw");
     } catch(e) {
-      TEquals("unauthorized", e.error)
+      T(e.error == "unauthorized");
       T(/conflict/.test(e.reason));
     }
 
     // you can delete a user doc
     s = CouchDB.session().userCtx;
-    TIsnull(s.name)
+    T(s.name == null);
     T(s.roles.indexOf("_admin") !== -1);
     T(usersDb.deleteDoc(jchrisWithConflict).ok);
 
@@ -98,7 +98,7 @@ couchTests.users_db = function(debug) {
       usersDb.save(jchrisUserDoc);
       T(false && "should only allow us to save doc when type == 'user'");
     } catch(e) {
-      TEquals("doc.type must be user", e.reason)
+      T(e.reason == "doc.type must be user");
     }
     jchrisUserDoc.type = "user";
 
@@ -108,7 +108,17 @@ couchTests.users_db = function(debug) {
       usersDb.save(jchrisUserDoc);
       T(false && "should only allow us to save doc when roles is an array");
     } catch(e) {
-      TEquals("doc.roles must be an array", e.reason)
+      T(e.reason == "doc.roles must be an array");
+    }
+    jchrisUserDoc.roles = [];
+
+    // "roles" must be an array of strings
+    jchrisUserDoc.roles = [12];
+    try {
+      usersDb.save(jchrisUserDoc);
+      T(false && "should only allow us to save doc when roles is an array of strings");
+    } catch(e) {
+      TEquals(e.reason, "doc.roles can only contain strings");
     }
     jchrisUserDoc.roles = [];
 
@@ -118,7 +128,7 @@ couchTests.users_db = function(debug) {
       usersDb.save(jchrisUserDoc);
       T(false && "should only allow us to save doc when roles exists");
     } catch(e) {
-      TEquals("doc.roles must exist", e.reason)
+      T(e.reason == "doc.roles must exist");
     }
     jchrisUserDoc.roles = [];
 
@@ -132,6 +142,24 @@ couchTests.users_db = function(debug) {
     } catch(e) {
       TEquals("Character `:` is not allowed in usernames.", e.reason);
     }
+
+    // test that you can login as a user with a password starting with :
+    var doc = CouchDB.prepareUserDoc({
+      name: "foo@example.org"
+    }, ":bar");
+    T(usersDb.save(doc).ok);
+
+    T(CouchDB.session().userCtx.name == null);
+
+    // test that you can use basic auth aginst the users db
+    var s = CouchDB.session({
+      headers : {
+        //                 base64_encode("foo@example.org::bar")
+        "Authorization" : "Basic Zm9vQGV4YW1wbGUub3JnOjpiYXI="
+      }
+    });
+    T(s.userCtx.name == "foo@example.org");
+
   };
 
   usersDb.deleteDb();

@@ -70,14 +70,6 @@ couchTests.show_documents = function(debug) {
       "fail" : stringFun(function(doc, req) {
         return doc._id;
       }),
-      "xml-type" : stringFun(function(doc, req) {
-         return {
-           "headers" : {
-             "Content-Type" : "application/xml"
-           },
-           "body" : new XML('<xml><node foo="bar"/></xml>').toXMLString()
-         }
-       }),
       "no-set-etag" : stringFun(function(doc, req) {
         return {
           headers : {
@@ -159,16 +151,6 @@ couchTests.show_documents = function(debug) {
           return "Ha ha, you said \"" + doc.word + "\".";
         });
 
-        provides("xml", function() {
-          var xml = new XML('<xml><node/></xml>');
-          // Becase Safari can't stand to see that dastardly
-          // E4X outside of a string. Outside of tests you
-          // can just use E4X literals.
-          eval('xml.node.@foo = doc.word');
-          log('xml: '+xml.toSource());
-          return xml.toXMLString();
-        });
-        
         provides("foo", function() {
           return "foofoo";
         });
@@ -204,29 +186,29 @@ couchTests.show_documents = function(debug) {
 
   // // error stacktraces
   // xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/render-error/"+docid);
-  // TEquals("render_error", JSON.parse(xhr.responseText).error)
+  // T(JSON.parse(xhr.responseText).error == "render_error");
 
   // hello template world (no docid)
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/hello");
-  TEquals("Empty World", xhr.responseText)
+  T(xhr.responseText == "Empty World");
 
   // hello template world (no docid)
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/empty");
-  TEquals("", xhr.responseText)
+  T(xhr.responseText == "");
 
   // // hello template world (non-existing docid)
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/fail/nonExistingDoc");
-  TEquals(404, xhr.status)
+  T(xhr.status == 404);
   var resp = JSON.parse(xhr.responseText);
-  TEquals("not_found", resp.error)
+  T(resp.error == "not_found");
   
   // show with doc
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/just-name/"+docid);
-  TEquals("Just Rusty", xhr.responseText)
+  T(xhr.responseText == "Just Rusty");
 
   // show with missing doc
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/just-name/missingdoc");
-  TEquals(404, xhr.status, "function is missing")
+  T(xhr.status == 404);
   TEquals("No such doc", xhr.responseText);
 
   // show with missing func
@@ -235,9 +217,9 @@ couchTests.show_documents = function(debug) {
 
   // missing design doc
   xhr = CouchDB.request("GET", "/test_suite_db/_design/missingddoc/_show/just-name/"+docid);
-  TEquals(404, xhr.status)
+  T(xhr.status == 404);
   var resp = JSON.parse(xhr.responseText);
-  TEquals("not_found", resp.error)
+  T(resp.error == "not_found");
 
   // query parameters
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/req-info/"+docid+"?foo=bar", {
@@ -253,11 +235,6 @@ couchTests.show_documents = function(debug) {
   T(equals(resp.path[5], docid));
   T(equals(resp.info.db_name, "test_suite_db"));
 
-  // returning a content-type
-  xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/xml-type/"+docid);
-  TEquals(xhr.getResponseHeader("Content-Type"), "application/xml")
-  TEquals(xhr.getResponseHeader("Vary"), "Accept")
-
   // accept header switching
   // different mime has different etag
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/accept-switch/"+docid, {
@@ -265,14 +242,14 @@ couchTests.show_documents = function(debug) {
   });
   var ct = xhr.getResponseHeader("Content-Type");
   T(/text\/html/.test(ct))
-  TEquals(xhr.getResponseHeader("Vary"), "Accept")
+  T("Accept" == xhr.getResponseHeader("Vary"));
   var etag = xhr.getResponseHeader("etag");
 
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/accept-switch/"+docid, {
     headers: {"Accept": "image/png;*/*"}
   });
   T(xhr.responseText.match(/PNG/))
-  TEquals(xhr.getResponseHeader("Content-Type"), "image/png")
+  T("image/png" == xhr.getResponseHeader("Content-Type"));
   var etag2 = xhr.getResponseHeader("etag");
   T(etag2 != etag);
 
@@ -286,7 +263,7 @@ couchTests.show_documents = function(debug) {
     headers: {"if-none-match": etag}
   });
   // should be 304
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // update the doc
   doc.name = "Crusty";
@@ -297,7 +274,7 @@ couchTests.show_documents = function(debug) {
     headers: {"if-none-match": etag}
   });
   // status is 200
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
 
   // get new etag and request again
   etag = xhr.getResponseHeader("etag");
@@ -305,7 +282,7 @@ couchTests.show_documents = function(debug) {
     headers: {"if-none-match": etag}
   });
   // should be 304
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // update design doc (but not function)
   designDoc.isChanged = true;
@@ -329,7 +306,7 @@ couchTests.show_documents = function(debug) {
     headers: {"if-none-match": etag}
   });
   // status is 200
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
 
 
   // JS can't set etag
@@ -347,17 +324,7 @@ couchTests.show_documents = function(debug) {
   var ct = xhr.getResponseHeader("Content-Type");
   T(/charset=utf-8/.test(ct))
   T(/text\/html/.test(ct))
-  TEquals("Ha ha, you said \"plankton\".", xhr.responseText)
-
-  // now with xml
-  xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/provides/"+docid, {
-    headers: {
-      "Accept": 'application/xml'
-    }
-  });
-  TEquals("application/xml", xhr.getResponseHeader("Content-Type"))
-  T(xhr.responseText.match(/node/));
-  T(xhr.responseText.match(/plankton/));
+  T(xhr.responseText == "Ha ha, you said \"plankton\".");
 
   // registering types works
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/provides/"+docid, {
@@ -365,7 +332,7 @@ couchTests.show_documents = function(debug) {
       "Accept": "application/x-foo"
     }
   });
-  TEquals("application/x-foo", xhr.getResponseHeader("Content-Type"))
+  T(xhr.getResponseHeader("Content-Type") == "application/x-foo");
   T(xhr.responseText.match(/foofoo/));
 
   // test the provides mime matcher without a match
@@ -377,15 +344,6 @@ couchTests.show_documents = function(debug) {
   var rs = JSON.parse(xhr.responseText);
   T(rs.error == "not_acceptable")
 
-
-  // should fallback on the first one
-  xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/provides/"+docid, {
-   headers: {
-     "Accept": 'application/x-foo, application/xml'
-   }
-  });
-  var ct = xhr.getResponseHeader("Content-Type");
-  T(/application\/xml/.test(ct));  
 
   // test inclusion of conflict state
   var doc1 = {_id:"foo", a:1};
@@ -402,15 +360,15 @@ couchTests.show_documents = function(debug) {
   var doc3 = {_id:"a/b/c", a:1};
   db.save(doc3);
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/withSlash/a/b/c");
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
 
   // hello template world (non-existing docid)
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/hello/nonExistingDoc");
-  TEquals("New World", xhr.responseText)
+  T(xhr.responseText == "New World");
 
   // test list() compatible API
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/list-api/foo");
-  TEquals("Hey", xhr.responseText)
+  T(xhr.responseText == "Hey");
   TEquals("Yeah", xhr.getResponseHeader("X-Couch-Test-Header"), "header should be cool");
 
   // test list() compatible API with provides function
@@ -422,11 +380,11 @@ couchTests.show_documents = function(debug) {
   TEquals(xhr.responseText, "1, 2, 3, 4, 5, 6, 7!", "should not break 1..7 range");
 
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/list-api-mix/foo");
-  TEquals("Hey Dude", xhr.responseText)
+  T(xhr.responseText == "Hey Dude");
   TEquals("Yeah", xhr.getResponseHeader("X-Couch-Test-Header"), "header should be cool");
 
   xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/list-api-mix-with-header/foo");
-  TEquals("Hey Dude", xhr.responseText)
+  T(xhr.responseText == "Hey Dude");
   TEquals("Yeah", xhr.getResponseHeader("X-Couch-Test-Header"), "header should be cool");
   TEquals("Oh Yeah!", xhr.getResponseHeader("X-Couch-Test-Header-Awesome"), "header should be cool");
 
@@ -455,7 +413,7 @@ couchTests.show_documents = function(debug) {
 
         xhr = CouchDB.request("GET", "/test_suite_db/_design/template/_show/secObj");
         var resp = JSON.parse(xhr.responseText);
-        TEquals(true, resp.foo)
+        T(resp.foo == true);
       }
   );
   

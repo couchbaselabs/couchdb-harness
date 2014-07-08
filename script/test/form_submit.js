@@ -18,7 +18,7 @@ couchTests.form_submit = function(debug) {
 
     var json = "{}";
     var xhr = CouchDB.request("POST", "/test_suite_db/baz", {body: json});
-    TEquals(415, xhr.status)
+    T(xhr.status == 415);
     result = JSON.parse(xhr.responseText);
     T(result.error, "bad_content_type");
     T(result.reason, "Invalid Content-Type header for form upload");

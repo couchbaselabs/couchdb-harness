@@ -21,75 +21,75 @@ couchTests.view_multi_key_all_docs = function(debug) {
 
   var keys = ["10","15","30","37","50"];
   var rows = db.allDocs({},keys).rows;
-  TEquals(keys.length, rows.length)
+  T(rows.length == keys.length);
   for(var i=0; i<rows.length; i++)
-    TEquals(keys[i], rows[i].id)
+    T(rows[i].id == keys[i]);
 
   // keys in GET parameters
   rows = db.allDocs({keys:keys}, null).rows;
-  TEquals(keys.length, rows.length)
+  T(rows.length == keys.length);
   for(var i=0; i<rows.length; i++)
-    TEquals(keys[i], rows[i].id)
+    T(rows[i].id == keys[i]);
 
   rows = db.allDocs({limit: 1}, keys).rows;
-  TEquals(1, rows.length)
-  TEquals(keys[0], rows[0].id)
+  T(rows.length == 1);
+  T(rows[0].id == keys[0]);
 
   // keys in GET parameters
   rows = db.allDocs({limit: 1, keys: keys}, null).rows;
-  TEquals(1, rows.length)
-  TEquals(keys[0], rows[0].id)
+  T(rows.length == 1);
+  T(rows[0].id == keys[0]);
 
   rows = db.allDocs({skip: 2}, keys).rows;
-  TEquals(3, rows.length)
+  T(rows.length == 3);
   for(var i=0; i<rows.length; i++)
-      TEquals(keys[i+2], rows[i].id)
+      T(rows[i].id == keys[i+2]);
 
   // keys in GET parameters
   rows = db.allDocs({skip: 2, keys: keys}, null).rows;
-  TEquals(3, rows.length)
+  T(rows.length == 3);
   for(var i=0; i<rows.length; i++)
-      TEquals(keys[i+2], rows[i].id)
+      T(rows[i].id == keys[i+2]);
 
   rows = db.allDocs({descending: "true"}, keys).rows;
-  TEquals(keys.length, rows.length)
+  T(rows.length == keys.length);
   for(var i=0; i<rows.length; i++)
-      TEquals(keys[keys.length-i-1], rows[i].id)
+      T(rows[i].id == keys[keys.length-i-1]);
 
   // keys in GET parameters
   rows = db.allDocs({descending: "true", keys: keys}, null).rows;
-  TEquals(keys.length, rows.length)
+  T(rows.length == keys.length);
   for(var i=0; i<rows.length; i++)
-      TEquals(keys[keys.length-i-1], rows[i].id)
+      T(rows[i].id == keys[keys.length-i-1]);
 
   rows = db.allDocs({descending: "true", skip: 3, limit:1}, keys).rows;
-  TEquals(1, rows.length)
-  TEquals(keys[1], rows[0].id)
+  T(rows.length == 1);
+  T(rows[0].id == keys[1]);
 
   // keys in GET parameters
   rows = db.allDocs({descending: "true", skip: 3, limit:1, keys: keys}, null).rows;
-  TEquals(1, rows.length)
-  TEquals(keys[1], rows[0].id)
+  T(rows.length == 1);
+  T(rows[0].id == keys[1]);
 
   // Check we get invalid rows when the key doesn't exist
   rows = db.allDocs({}, [1, "i_dont_exist", "0"]).rows;
-  TEquals(3, rows.length)
-  TEquals("not_found", rows[0].error)
+  T(rows.length == 3);
+  T(rows[0].error == "not_found");
   T(!rows[0].id);
-  TEquals("not_found", rows[1].error)
+  T(rows[1].error == "not_found");
   T(!rows[1].id);
-  TEquals("0", rows[2].id == rows[2].key && rows[2].key)
+  T(rows[2].id == rows[2].key && rows[2].key == "0");
 
   // keys in GET parameters
   rows = db.allDocs({keys: [1, "i_dont_exist", "0"]}, null).rows;
-  TEquals(3, rows.length)
-  TEquals("not_found", rows[0].error)
+  T(rows.length == 3);
+  T(rows[0].error == "not_found");
   T(!rows[0].id);
-  TEquals("not_found", rows[1].error)
+  T(rows[1].error == "not_found");
   T(!rows[1].id);
   T(rows[2].id == rows[2].key && rows[2].key == "0");
 
   // empty keys
   rows = db.allDocs({keys: []}, null).rows;
-  TEquals(0, rows.length)
+  T(rows.length == 0);
 };

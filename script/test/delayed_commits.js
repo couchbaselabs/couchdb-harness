@@ -32,7 +32,7 @@ couchTests.delayed_commits = function(debug) {
 
       restartServer();
 
-      TIsnull(db.open("1")) // lost the update.
+      T(db.open("1") == null); // lost the update.
       // note if we waited > 1 sec before the restart, the doc would likely
       // commit.
 
@@ -79,7 +79,7 @@ couchTests.delayed_commits = function(debug) {
       T(commitResult.ok && commitResult.instance_start_time != instanceStartTime);
       // start times don't match, meaning the server lost our change
 
-      TIsnull(db.open("3")) // yup lost it
+      T(db.open("3") == null); // yup lost it
 
       // retry with no server restart
 
@@ -137,7 +137,7 @@ couchTests.delayed_commits = function(debug) {
       try {
         db.save({_id:"6",a:2,b:4});
       } catch( e) {
-        TEquals("conflict", e.error)
+        T(e.error == "conflict");
       }
       //Wait for the delayed commit interval to pass
       var time = new Date();

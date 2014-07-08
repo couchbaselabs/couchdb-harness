@@ -32,14 +32,11 @@ couchTests.attachments= function(debug) {
 
   var save_response = db.save(binAttDoc);
   T(save_response.ok);
-  
-  var acceptAll = {headers: {Accept: "*/*"}};
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc/foo.txt", acceptAll);
-  TEquals("This is a base64 encoded text", xhr.responseText)
-  TEquals("application/octet-stream", xhr.getResponseHeader("Content-Type"))
-//  TEquals("\"aEI7pOYCRBLTRQvvqYrrJQ==\"", xhr.getResponseHeader("Etag"));
-  T(xhr.getResponseHeader("Etag") != null, "Missing eTag")
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc/foo.txt");
+  T(xhr.responseText == "This is a base64 encoded text");
+  T(xhr.getResponseHeader("Content-Type") == "application/octet-stream");
+  TEquals("\"aEI7pOYCRBLTRQvvqYrrJQ==\"", xhr.getResponseHeader("Etag"));
 
   // empty attachment
   var binAttDoc2 = {
@@ -54,9 +51,9 @@ couchTests.attachments= function(debug) {
 
   T(db.save(binAttDoc2).ok);
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc2/foo.txt", acceptAll);
-  TEquals(0, xhr.responseText.length)
-  TEquals("text/plain", xhr.getResponseHeader("Content-Type"))
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc2/foo.txt");
+  T(xhr.responseText.length == 0);
+  T(xhr.getResponseHeader("Content-Type") == "text/plain");
 
   // test RESTful doc API
 
@@ -64,7 +61,7 @@ couchTests.attachments= function(debug) {
     body:"This is no base64 encoded text",
     headers:{"Content-Type": "text/plain;charset=utf-8"}
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
   TEquals("/bin_doc2/foo2.txt",
     xhr.getResponseHeader("Location").substr(-18),
     "should return Location header to newly created or updated attachment");
@@ -76,20 +73,20 @@ couchTests.attachments= function(debug) {
   T(binAttDoc2._attachments["foo.txt"] !== undefined);
   T(binAttDoc2._attachments["foo2.txt"] !== undefined);
   TEqualsIgnoreCase("text/plain;charset=utf-8", binAttDoc2._attachments["foo2.txt"].content_type);
-  TEquals(30, binAttDoc2._attachments["foo2.txt"].length)
+  T(binAttDoc2._attachments["foo2.txt"].length == 30);
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc2/foo2.txt", acceptAll);
-  TEquals("This is no base64 encoded text", xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc2/foo2.txt");
+  T(xhr.responseText == "This is no base64 encoded text");
   TEqualsIgnoreCase("text/plain;charset=utf-8", xhr.getResponseHeader("Content-Type"));
 
   // test without rev, should fail
   var xhr = CouchDB.request("DELETE", "/test_suite_db/bin_doc2/foo2.txt");
-  TEquals(409, xhr.status)
+  T(xhr.status == 409);
 
   // test with rev, should not fail
   var xhr = CouchDB.request("DELETE", "/test_suite_db/bin_doc2/foo2.txt?rev=" + rev);
-  TEquals(200, xhr.status)
-  TIsnull(xhr.getResponseHeader("Location"),
+  T(xhr.status == 200);
+  TEquals(null, xhr.getResponseHeader("Location"),
     "should not return Location header on DELETE request");
 
   // test binary data
@@ -98,12 +95,12 @@ couchTests.attachments= function(debug) {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:bin_data
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
   var rev = JSON.parse(xhr.responseText).rev;
   TEquals('"' + rev + '"', xhr.getResponseHeader("Etag"));
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt", acceptAll);
-  TEquals(bin_data, xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt");
+  T(xhr.responseText == bin_data);
   TEqualsIgnoreCase("text/plain;charset=utf-8", xhr.getResponseHeader("Content-Type"));
 
   // without rev
@@ -111,42 +108,42 @@ couchTests.attachments= function(debug) {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:bin_data
   });
-  TEquals(409, xhr.status)
+  T(xhr.status == 409);
 
   // with nonexistent rev
   var xhr = CouchDB.request("PUT", "/test_suite_db/bin_doc3/attachment.txt"  + "?rev=1-adae8575ecea588919bd08eb020c708e", {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:bin_data
   });
-  TEquals(409, xhr.status)
+  T(xhr.status == 409);
 
   // with current rev
   var xhr = CouchDB.request("PUT", "/test_suite_db/bin_doc3/attachment.txt?rev=" + rev, {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:bin_data
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
   var rev = JSON.parse(xhr.responseText).rev;
   TEquals('"' + rev + '"', xhr.getResponseHeader("Etag"));
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt", acceptAll);
-  TEquals(bin_data, xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt");
+  T(xhr.responseText == bin_data);
   TEqualsIgnoreCase("text/plain;charset=utf-8", xhr.getResponseHeader("Content-Type"));
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt?rev=" + rev, acceptAll);
-  TEquals(bin_data, xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt?rev=" + rev);
+  T(xhr.responseText == bin_data);
   TEqualsIgnoreCase("text/plain;charset=utf-8", xhr.getResponseHeader("Content-Type"));
 
   var xhr = CouchDB.request("DELETE", "/test_suite_db/bin_doc3/attachment.txt?rev=" + rev);
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt", acceptAll);
-  TEquals(404, xhr.status)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt");
+  T(xhr.status == 404);
 
   // deleted attachment is still accessible with revision
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt?rev=" + rev, acceptAll);
-  TEquals(200, xhr.status)
-  TEquals(bin_data, xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc3/attachment.txt?rev=" + rev);
+  T(xhr.status == 200);
+  T(xhr.responseText == bin_data);
   TEqualsIgnoreCase("text/plain;charset=utf-8", xhr.getResponseHeader("Content-Type"));
 
   // empty attachments
@@ -154,23 +151,23 @@ couchTests.attachments= function(debug) {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:""
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
   var rev = JSON.parse(xhr.responseText).rev;
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc4/attachment.txt", acceptAll);
-  TEquals(200, xhr.status)
-  TEquals(0, xhr.responseText.length)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc4/attachment.txt");
+  T(xhr.status == 200);
+  T(xhr.responseText.length == 0);
 
   // overwrite previsously empty attachment
   var xhr = CouchDB.request("PUT", "/test_suite_db/bin_doc4/attachment.txt?rev=" + rev, {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:"This is a string"
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc4/attachment.txt", acceptAll);
-  TEquals(200, xhr.status)
-  TEquals("This is a string", xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc4/attachment.txt");
+  T(xhr.status == 200);
+  T(xhr.responseText == "This is a string");
 
   // Attachment sparseness COUCHDB-220
 
@@ -205,7 +202,7 @@ couchTests.attachments= function(debug) {
 
   // Compact it.
   T(db.compact().ok);
-  TEquals(202, db.last_req.status)
+  T(db.last_req.status == 202);
   // compaction isn't instantaneous, loop until done
   while (db.info().compact_running) {};
 
@@ -217,46 +214,32 @@ couchTests.attachments= function(debug) {
 
 
   // test large attachments - COUCHDB-366
-  var lorem
-  var loremReq = CouchDB.request("GET", "/_utils/script/test/lorem.txt", acceptAll);
-  if (loremReq.status == 200) {
-    lorem = loremReq.responseText;
-  } else {
-    lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nunc sapien, porta id pellentesque at, elementum et felis. ";
-    while (lorem.length < 42103)
-      lorem = lorem + lorem;
-  }
+  var lorem = CouchDB.request("GET", "/_utils/script/test/lorem.txt").responseText;
 
   var xhr = CouchDB.request("PUT", "/test_suite_db/bin_doc5/lorem.txt", {
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:lorem
   });
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
   var rev = JSON.parse(xhr.responseText).rev;
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc5/lorem.txt", acceptAll);
-  TEquals(lorem, xhr.responseText)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc5/lorem.txt");
+  T(xhr.responseText == lorem);
   TEqualsIgnoreCase("text/plain;charset=utf-8", xhr.getResponseHeader("Content-Type"));
 
   // test large inline attachment too
-  var lorem_b64;
-  loremReq = CouchDB.request("GET", "/_utils/script/test/lorem_b64.txt", acceptAll).responseText;
-  if (loremReq.status == 200) {
-    lorem_b64 = loremReq.responseText;
-  } else {
-    lorem_b64 = Base64.encode(lorem);
-  }
+  var lorem_b64 = CouchDB.request("GET", "/_utils/script/test/lorem_b64.txt").responseText;
   var doc = db.open("bin_doc5", {attachments:true});
-  TEquals(lorem_b64, doc._attachments["lorem.txt"].data)
+  T(doc._attachments["lorem.txt"].data == lorem_b64);
 
   // test etags for attachments.
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc5/lorem.txt", acceptAll);
-  TEquals(200, xhr.status)
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc5/lorem.txt");
+  T(xhr.status == 200);
   var etag = xhr.getResponseHeader("etag");
   xhr = CouchDB.request("GET", "/test_suite_db/bin_doc5/lorem.txt", {
-    headers: {"if-none-match": etag, "Accept": "*/*"}
+    headers: {"if-none-match": etag}
   });
-  TEquals(304, xhr.status)
+  T(xhr.status == 304);
 
   // test COUCHDB-497 - empty attachments
   var xhr = CouchDB.request("PUT", "/test_suite_db/bin_doc5/empty.txt?rev="+rev, {
@@ -290,20 +273,18 @@ couchTests.attachments= function(debug) {
   T(db.save(bin_doc6).ok);
   // stub out the attachment
   bin_doc6._attachments["foo.txt"] = { stub: true };
-  TEquals(true, db.save(bin_doc6).ok)
+  T(db.save(bin_doc6).ok == true);
 
   // wrong rev pos specified
   
   // stub out the attachment with the wrong revpos
   bin_doc6._attachments["foo.txt"] = { stub: true, revpos: 10};
-  var failed = false;
   try {
-      db.save(bin_doc6);
+      T(db.save(bin_doc6).ok == true);
+      T(false && "Shouldn't get here!");
   } catch (e) {
-      T(e.error == "missing_stub" || e.error == "Invalid attachment", "Wrong attachment error");
-      failed = true;
+      T(e.error == "missing_stub");
   }
-  T(failed, "Save should have failed");
 
   // test MD5 header
   var bin_data = "foo bar"
@@ -314,7 +295,34 @@ couchTests.attachments= function(debug) {
   });
   TEquals(201, xhr.status);
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc7/attachment.txt", acceptAll);
+  var xhr = CouchDB.request("GET", "/test_suite_db/bin_doc7/attachment.txt");
   TEquals('MntvB0NYESObxH4VRDUycw==', xhr.getResponseHeader("Content-MD5"));
+
+  // test attachment via multipart/form-data
+  var bin_doc8 = {
+    _id: "bin_doc8"
+  };
+  T(db.save(bin_doc8).ok);
+  var doc = db.open("bin_doc8");
+  var body = "------TF\r\n" +
+    "Content-Disposition: form-data; name=\"_rev\"\r\n\r\n" +
+    doc._rev + "\r\n" +
+    "------TF\r\n" +
+    "Content-Disposition: form-data; name=\"_attachments\"; filename=\"file.txt\"\r\n" +
+    "Content-Type: text/plain\r\n\r\n" +
+    "contents of file.txt\r\n\r\n" +
+    "------TF--"
+  xhr = CouchDB.request("POST", "/test_suite_db/bin_doc8", {
+    headers: {
+      "Content-Type": "multipart/form-data; boundary=----TF",
+      "Content-Length": body.length
+    },
+    body: body
+  });
+  TEquals(201, xhr.status);
+  TEquals(true, JSON.parse(xhr.responseText).ok);
+  var doc = db.open("bin_doc8");
+  T(doc._attachments);
+  T(doc._attachments['file.txt']);
 
 };

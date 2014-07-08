@@ -29,13 +29,10 @@ couchTests.attachment_names = function(debug) {
   var save_response = db.save(goodDoc);
   T(save_response.ok);
 
-  var xhr = CouchDB.request("GET", "/test_suite_db/good_doc/Колян.txt",
-                            {headers: {Accept: "*/*"}});
-  TEquals("This is a base64 encoded text", xhr.responseText)
-  TEquals("application/octet-stream", xhr.getResponseHeader("Content-Type"))
-//  TEquals("\"aEI7pOYCRBLTRQvvqYrrJQ==\"", xhr.getResponseHeader("Etag"));
-// Specifics of Etag value depend upon implementation; don't expect a particular string
-  T(xhr.getResponseHeader("Etag"))
+  var xhr = CouchDB.request("GET", "/test_suite_db/good_doc/Колян.txt");
+  T(xhr.responseText == "This is a base64 encoded text");
+  T(xhr.getResponseHeader("Content-Type") == "application/octet-stream");
+  TEquals("\"aEI7pOYCRBLTRQvvqYrrJQ==\"", xhr.getResponseHeader("Etag"));
 
   var binAttDoc = {
     _id: "bin_doc",
@@ -86,15 +83,13 @@ couchTests.attachment_names = function(debug) {
     }
   };
 
-  var saved = false;
   try {
     db.save(binAttDoc);
-    saved = true;
+    TEquals(1, 2, "Attachment name with leading underscore saved. Should never show!");
   } catch (e) {
     TEquals("bad_request", e.error, "attachment_name: leading underscore");
     TEquals("Attachment name can't start with '_'", e.reason, "attachment_name: leading underscore");
   }
-  T(!saved, "Attachment name with leading underscore saved. Should never show!");
 
   // todo: form uploads, waiting for cmlenz' test case for form uploads
 

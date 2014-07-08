@@ -11,6 +11,9 @@
 // the License.
 
 couchTests.rev_stemming = function(debug) {
+  var db = new CouchDB("test_suite_db", {"X-Couch-Full-Commit":"false"});
+  db.deleteDb();
+  db.createDb();
   var db = new CouchDB("test_suite_db_a", {"X-Couch-Full-Commit":"false"});
   db.deleteDb();
   db.createDb();
@@ -21,15 +24,15 @@ couchTests.rev_stemming = function(debug) {
 
   var newLimit = 5;
 
-  TEquals(1000, db.getDbProperty("_revs_limit"))
+  T(db.getDbProperty("_revs_limit") == 1000);
 
   // Make an invalid request to _revs_limit
   // Should return 400
   var xhr = CouchDB.request("PUT", "/test_suite_db/_revs_limit", {body:"\"foo\""});
-  TEquals(400, xhr.status)
+  T(xhr.status == 400);
   var result = JSON.parse(xhr.responseText);
-  TEquals("bad_request", result.error)
-  TEquals("Rev limit has to be an integer", result.reason)
+  T(result.error == "bad_request");
+  T(result.reason == "Rev limit has to be an integer");
 
   var doc = {_id:"foo",foo:0}
   for( var i=0; i < newLimit + 1; i++) {
@@ -37,14 +40,14 @@ couchTests.rev_stemming = function(debug) {
     T(db.save(doc).ok);
   }
   var doc0 = db.open("foo", {revs:true});
-  TEquals(newLimit + 1, doc0._revisions.ids.length)
+  T(doc0._revisions.ids.length == newLimit + 1);
 
   var docBar = {_id:"bar",foo:0}
   for( var i=0; i < newLimit + 1; i++) {
     docBar.foo++;
     T(db.save(docBar).ok);
   }
-  TEquals(newLimit + 1, db.open("bar", {revs:true})._revisions.ids.length)
+  T(db.open("bar", {revs:true})._revisions.ids.length == newLimit + 1);
 
   T(db.setDbProperty("_revs_limit", newLimit).ok);
 
@@ -53,14 +56,14 @@ couchTests.rev_stemming = function(debug) {
     T(db.save(doc).ok);
   }
   doc0 = db.open("foo", {revs:true});
-  TEquals(newLimit, doc0._revisions.ids.length)
+  T(doc0._revisions.ids.length == newLimit);
 
 
   // If you replicate after you make more edits than the limit, you'll
   // cause a spurious edit conflict.
   CouchDB.replicate("test_suite_db_a", "test_suite_db_b");
   var docB1 = dbB.open("foo",{conflicts:true})
-  TEquals(undefined, docB1._conflicts)
+  T(docB1._conflicts == null);
 
   for( var i=0; i < newLimit - 1; i++) {
     doc.foo++;
@@ -70,7 +73,7 @@ couchTests.rev_stemming = function(debug) {
   // one less edit than limit, no conflict
   CouchDB.replicate("test_suite_db_a", "test_suite_db_b");
   var docB1 = dbB.open("foo",{conflicts:true})
-  TEquals(undefined, docB1._conflicts)
+  T(docB1._conflicts == null);
 
   //now we hit the limit
   for( var i=0; i < newLimit; i++) {

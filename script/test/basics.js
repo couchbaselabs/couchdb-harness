@@ -13,8 +13,7 @@
 // Do some basic tests.
 couchTests.basics = function(debug) {
   var result = JSON.parse(CouchDB.request("GET", "/").responseText);
-  T(typeof result === "object");
-  T(!!result.version);
+  T(result.couchdb == "Welcome");
 
   var db = new CouchDB("test_suite_db", {"X-Couch-Full-Commit":"false"});
   db.deleteDb();
@@ -26,7 +25,7 @@ couchTests.basics = function(debug) {
 
   // PUT on existing DB should return 412 instead of 500
   xhr = CouchDB.request("PUT", "/test_suite_db/");
-  TEquals(412, xhr.status)
+  T(xhr.status == 412);
   if (debug) debugger;
 
   // creating a new DB should return Location header
@@ -44,14 +43,11 @@ couchTests.basics = function(debug) {
   });
 
   // Get the database info, check the db_name
-  TEquals("test_suite_db", db.info().db_name)
-
-  T(CouchDB.allDbs().some(function (db) {
-    return /test_suite_db/.test(db);
-  }));
+  T(db.info().db_name == "test_suite_db");
+  T(CouchDB.allDbs().indexOf("test_suite_db") != -1);
 
   // Get the database info, check the doc_count
-  TEquals(0, db.info().doc_count)
+  T(db.info().doc_count == 0);
 
   // create a document and save it to the database
   var doc = {_id:"0",a:1,b:1};
@@ -69,13 +65,11 @@ couchTests.basics = function(debug) {
 
   // make sure the revs_info status is good
   var doc = db.open(id, {revs_info:true});
-  TEquals("available", doc._revs_info[0].status)
+  T(doc._revs_info[0].status == "available");
 
   // make sure you can do a seq=true option
-
-  // TODO: 
-  // var doc = db.open(id, {local_seq:true});
-  // TEquals(1, doc._local_seq)
+  var doc = db.open(id, {local_seq:true});
+  T(doc._local_seq == 1);
 
 
   // Create some more documents.
@@ -85,7 +79,7 @@ couchTests.basics = function(debug) {
   T(db.save({_id:"3",a:4,b:16}).ok);
 
   // Check the database doc count
-  TEquals(4, db.info().doc_count)
+  T(db.info().doc_count == 4);
 
   // COUCHDB-954
   var oldRev = db.save({_id:"COUCHDB-954", a:1}).rev;
@@ -93,20 +87,18 @@ couchTests.basics = function(debug) {
 
   // test behavior of open_revs with explicit revision list
   var result = db.open("COUCHDB-954", {open_revs:[oldRev,newRev]});
-  TEquals(2, result.length, "should get two revisions back");
+  T(result.length == 2, "should get two revisions back");
   T(result[0].ok);
   T(result[1].ok);
 
-  // TODO: https://github.com/daleharvey/pouchdb/issues/598
   // latest=true suppresses non-leaf revisions
-  // var result = db.open("COUCHDB-954", {open_revs:[oldRev,newRev], latest:true});
-  // T(result.length == 1, "should only get the child revision with latest=true");
-  // T(result[0].ok._rev == newRev, "should get the child and not the parent");
+  var result = db.open("COUCHDB-954", {open_revs:[oldRev,newRev], latest:true});
+  T(result.length == 1, "should only get the child revision with latest=true");
+  T(result[0].ok._rev == newRev, "should get the child and not the parent");
 
-  // TODO: https://github.com/daleharvey/pouchdb/issues/598
   // latest=true returns a child when you ask for a parent
-  // var result = db.open("COUCHDB-954", {open_revs:[oldRev], latest:true});
-  // T(result[0].ok._rev == newRev, "should get child when we requested parent");
+  var result = db.open("COUCHDB-954", {open_revs:[oldRev], latest:true});
+  T(result[0].ok._rev == newRev, "should get child when we requested parent");
 
   // clean up after ourselves
   db.save({_id:"COUCHDB-954", _rev:newRev, _deleted:true});
@@ -138,7 +130,7 @@ couchTests.basics = function(debug) {
   results = db.query(mapFunction);
 
   // the modified document should now be in the results.
-  TEquals(2, results.total_rows)
+  T(results.total_rows == 2);
 
   // write 2 more documents
   T(db.save({a:3,b:9}).ok);
@@ -147,10 +139,8 @@ couchTests.basics = function(debug) {
   results = db.query(mapFunction);
 
   // 1 more document should now be in the result.
-  TEquals(3, results.total_rows)
-
-  // TODO: This probably fails because a previous test is commented out.
-  // TEquals(6, db.info().doc_count)
+  T(results.total_rows == 3);
+  T(db.info().doc_count == 6);
 
   var reduceFunction = function(keys, values){
     return sum(values);
@@ -158,23 +148,52 @@ couchTests.basics = function(debug) {
 
   results = db.query(mapFunction, reduceFunction);
 
-  TEquals(33, results.rows[0].value)
+  T(results.rows[0].value == 33);
 
   // delete a document
   T(db.deleteDoc(existingDoc).ok);
 
   // make sure we can't open the doc
-  TIsnull(db.open(existingDoc._id))
+  T(db.open(existingDoc._id) == null);
 
   results = db.query(mapFunction);
 
   // 1 less document should now be in the results.
-  TEquals(2, results.total_rows)
-  // TODO: This probably fails because a previous test is commented out.
-  // TEquals(5, db.info().doc_count)
+  T(results.total_rows == 2);
+  T(db.info().doc_count == 5);
+
+  // make sure we can still open the old rev of the deleted doc
+  T(db.open(existingDoc._id, {rev: existingDoc._rev}) != null);
+  // make sure restart works
+  T(db.ensureFullCommit().ok);
+  restartServer();
 
   // make sure we can still open
   T(db.open(existingDoc._id, {rev: existingDoc._rev}) != null);
+
+  // test that the POST response has a Location header
+  var xhr = CouchDB.request("POST", "/test_suite_db", {
+    body: JSON.stringify({"foo":"bar"}),
+    headers: {"Content-Type": "application/json"}
+  });
+  var resp = JSON.parse(xhr.responseText);
+  T(resp.ok);
+  var loc = xhr.getResponseHeader("Location");
+  T(loc, "should have a Location header");
+  var locs = loc.split('/');
+  T(locs[locs.length-1] == resp.id);
+  T(locs[locs.length-2] == "test_suite_db");
+
+  // test that that POST's with an _id aren't overriden with a UUID.
+  var xhr = CouchDB.request("POST", "/test_suite_db", {
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({"_id": "oppossum", "yar": "matey"})
+  });
+  var resp = JSON.parse(xhr.responseText);
+  T(resp.ok);
+  T(resp.id == "oppossum");
+  var doc = db.open("oppossum");
+  T(doc.yar == "matey");
 
   // document put's should return a Location header
   var xhr = CouchDB.request("PUT", "/test_suite_db/newdoc", {
@@ -189,61 +208,66 @@ couchTests.basics = function(debug) {
 
   // deleting a non-existent doc should be 404
   xhr = CouchDB.request("DELETE", "/test_suite_db/doc-does-not-exist");
-  TEquals(404, xhr.status)
+  T(xhr.status == 404);
 
-  // TODO: https://github.com/daleharvey/pouchdb/issues/600
   // Check for invalid document members
-  // var bad_docs = [
-  //   ["goldfish", {"_zing": 4}],
-  //   ["zebrafish", {"_zoom": "hello"}],
-  //   ["mudfish", {"zane": "goldfish", "_fan": "something smells delicious"}],
-  //   ["tastyfish", {"_bing": {"wha?": "soda can"}}]
-  // ];
-  // var test_doc = function(info) {
-  // var data = JSON.stringify(info[1]);
-  //   xhr = CouchDB.request("PUT", "/test_suite_db/" + info[0], {body: data});
-  //   TEquals(500, xhr.status)
-  //   result = JSON.parse(xhr.responseText);
-  //   TEquals("doc_validation", result.error)
+  var bad_docs = [
+    ["goldfish", {"_zing": 4}],
+    ["zebrafish", {"_zoom": "hello"}],
+    ["mudfish", {"zane": "goldfish", "_fan": "something smells delicious"}],
+    ["tastyfish", {"_bing": {"wha?": "soda can"}}]
+  ];
+  var test_doc = function(info) {
+  var data = JSON.stringify(info[1]);
+    xhr = CouchDB.request("PUT", "/test_suite_db/" + info[0], {body: data});
+    T(xhr.status == 500);
+    result = JSON.parse(xhr.responseText);
+    T(result.error == "doc_validation");
 
-  //   xhr = CouchDB.request("POST", "/test_suite_db/", {
-  //     headers: {"Content-Type": "application/json"},
-  //     body: data
-  //   });
-  //   TEquals(500, xhr.status)
-  //   result = JSON.parse(xhr.responseText);
-  //   TEquals("doc_validation", result.error)
-  // };
-  // bad_docs.forEach(test_doc);
+    xhr = CouchDB.request("POST", "/test_suite_db/", {
+      headers: {"Content-Type": "application/json"},
+      body: data
+    });
+    T(xhr.status == 500);
+    result = JSON.parse(xhr.responseText);
+    T(result.error == "doc_validation");
+  };
+  bad_docs.forEach(test_doc);
 
   // Check some common error responses.
-
-  // TODO: https://github.com/daleharvey/pouchdb/issues/676
   // PUT body not an object
-  // xhr = CouchDB.request("PUT", "/test_suite_db/bar", {body: "[]"});
-  // TEquals(400, xhr.status)
-  // result = JSON.parse(xhr.responseText);
-  // TEquals("bad_request", result.error)
-  // TEquals("Document must be a JSON object", result.reason)
+  xhr = CouchDB.request("PUT", "/test_suite_db/bar", {body: "[]"});
+  T(xhr.status == 400);
+  result = JSON.parse(xhr.responseText);
+  T(result.error == "bad_request");
+  T(result.reason == "Document must be a JSON object");
 
   // Body of a _bulk_docs is not an object
   xhr = CouchDB.request("POST", "/test_suite_db/_bulk_docs", {body: "[]"});
-  TEquals(400, xhr.status)
+  T(xhr.status == 400);
   result = JSON.parse(xhr.responseText);
-  TEquals("bad_request", result.error)
+  T(result.error == "bad_request");
+  T(result.reason == "Request body must be a JSON object");
 
   // Body of an _all_docs  multi-get is not a {"key": [...]} structure.
   xhr = CouchDB.request("POST", "/test_suite_db/_all_docs", {body: "[]"});
-  TEquals(400, xhr.status)
-  TEquals("bad_request", result.error)
+  T(xhr.status == 400);
+  result = JSON.parse(xhr.responseText);
+  T(result.error == "bad_request");
+  T(result.reason == "Request body must be a JSON object");
+  var data = "{\"keys\": 1}";
+  xhr = CouchDB.request("POST", "/test_suite_db/_all_docs", {body:data});
+  T(xhr.status == 400);
+  result = JSON.parse(xhr.responseText);
+  T(result.error == "bad_request");
+  T(result.reason == "`keys` member must be a array.");
 
-  // TODO: https://github.com/daleharvey/pouchdb/issues/600 - pouch.leveldb.js#550
-  // var data = "{\"keys\": 1}";
-  // xhr = CouchDB.request("POST", "/test_suite_db/_all_docs", {body:data});
-  // TEquals(400, xhr.status)
-  // result = JSON.parse(xhr.responseText);
-  // TEquals("bad_request", result.error)
-  // TEquals("`keys` member must be a array.", result.reason)
+  // oops, the doc id got lost in code nirwana
+  xhr = CouchDB.request("DELETE", "/test_suite_db/?rev=foobarbaz");
+  TEquals(400, xhr.status, "should return a bad request");
+  result = JSON.parse(xhr.responseText);
+  TEquals("bad_request", result.error);
+  TEquals("You tried to DELETE a database with a ?rev= parameter. Did you mean to DELETE a document instead?", result.reason);
 
   // On restart, a request for creating a database that already exists can
   // not override the existing database file
@@ -253,7 +277,11 @@ couchTests.basics = function(debug) {
   TEquals(201, xhr.status);
 
   TEquals(true, db.save({"_id": "doc1"}).ok);
+  TEquals(true, db.ensureFullCommit().ok);
+
   TEquals(1, db.info().doc_count);
+
+  restartServer();
 
   xhr = CouchDB.request("PUT", "/" + db.name);
   TEquals(412, xhr.status);

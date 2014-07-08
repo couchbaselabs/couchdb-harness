@@ -115,7 +115,7 @@ couchTests.cookie_auth = function(debug) {
 
       // we can't create docs with malformed ids
       var badIdDoc = CouchDB.prepareUserDoc({
-        name: "foo"
+        name: "w00x"
       }, "bar");
 
       badIdDoc._id = "org.apache.couchdb:w00x";
@@ -147,14 +147,14 @@ couchTests.cookie_auth = function(debug) {
       // update one's own credentials document
       jasonUserDoc.foo=2;
       T(usersDb.save(jasonUserDoc).ok);
-      TEquals(-1, CouchDB.session().userCtx.roles.indexOf("_admin"))
+      T(CouchDB.session().userCtx.roles.indexOf("_admin") == -1);
       // can't delete another users doc unless you are admin
       try {
         usersDb.deleteDoc(jchrisUserDoc);
         T(false && "Can't delete other users docs. Should have thrown an error.");
       } catch (e) {
-        TEquals("forbidden", e.error);
-        TEquals(403, usersDb.last_req.status);
+        TEquals("not_found", e.error);
+        TEquals(404, usersDb.last_req.status);
       }
 
       // TODO should login() throw an exception here?
@@ -188,8 +188,8 @@ couchTests.cookie_auth = function(debug) {
       //
       // test that you can't update docs unless you are logged in as the user (or are admin)
       T(CouchDB.login("jchris@apache.org", "funnybone").ok);
-      TEquals("jchris@apache.org", CouchDB.session().userCtx.name)
-      TEquals(0, CouchDB.session().userCtx.roles.length)
+      T(CouchDB.session().userCtx.name == "jchris@apache.org");
+      T(CouchDB.session().userCtx.roles.length == 0);
 
       jasonUserDoc.foo=3;
 
@@ -197,8 +197,8 @@ couchTests.cookie_auth = function(debug) {
         usersDb.save(jasonUserDoc);
         T(false && "Can't update someone else's user doc. Should have thrown an error.");
       } catch (e) {
-        TEquals("forbidden", e.error)
-        TEquals(403, usersDb.last_req.status)
+        T(e.error == "not_found");
+        T(usersDb.last_req.status == 404);
       }
 
       // test that you can't edit roles unless you are admin
@@ -208,8 +208,8 @@ couchTests.cookie_auth = function(debug) {
         usersDb.save(jchrisUserDoc);
         T(false && "Can't set roles unless you are admin. Should have thrown an error.");
       } catch (e) {
-        TEquals("forbidden", e.error)
-        TEquals(403, usersDb.last_req.status)
+        T(e.error == "forbidden");
+        T(usersDb.last_req.status == 403);
       }
 
       T(CouchDB.logout().ok);
@@ -221,13 +221,13 @@ couchTests.cookie_auth = function(debug) {
       jchrisUserDoc.roles = ["_bar"];
 
       var res = save_as(usersDb, jchrisUserDoc, "jan");
-      TEquals("forbidden", res.error)
-      TEquals(403, usersDb.last_req.status)
+      T(res.error == "forbidden");
+      T(usersDb.last_req.status == 403);
 
       // make sure the foo role has been applied
       T(CouchDB.login("jchris@apache.org", "funnybone").ok);
-      TEquals("jchris@apache.org", CouchDB.session().userCtx.name)
-      TEquals(-1, CouchDB.session().userCtx.roles.indexOf("_admin"))
+      T(CouchDB.session().userCtx.name == "jchris@apache.org");
+      T(CouchDB.session().userCtx.roles.indexOf("_admin") == -1);
       T(CouchDB.session().userCtx.roles.indexOf("foo") != -1);
 
       // now let's make jchris a server admin
@@ -240,7 +240,7 @@ couchTests.cookie_auth = function(debug) {
       run_on_modified_server([{section: "admins",
         key: "jchris@apache.org", value: "funnybone"}], function() {
           T(CouchDB.login("jchris@apache.org", "funnybone").ok);
-          TEquals("jchris@apache.org", CouchDB.session().userCtx.name)
+          T(CouchDB.session().userCtx.name == "jchris@apache.org");
           T(CouchDB.session().userCtx.roles.indexOf("_admin") != -1);
           // test that jchris still has the foo role
           T(CouchDB.session().userCtx.roles.indexOf("foo") != -1);
@@ -253,11 +253,11 @@ couchTests.cookie_auth = function(debug) {
           T(CouchDB.logout().ok);
           T(CouchDB.login("jchris@apache.org", "funnybone").ok);
           var s = CouchDB.session();
-          TEquals("jchris@apache.org", s.userCtx.name)
+          T(s.userCtx.name == "jchris@apache.org");
           T(s.userCtx.roles.indexOf("_admin") != -1);
           // test session info
-          TEquals("cookie", s.info.authenticated)
-          TEquals("test_suite_users", s.info.authentication_db)
+          T(s.info.authenticated == "cookie");
+          T(s.info.authentication_db == "test_suite_users");
           // test that jchris still has the foo role
           T(CouchDB.session().userCtx.roles.indexOf("foo") != -1);
         });
@@ -272,7 +272,6 @@ couchTests.cookie_auth = function(debug) {
 
   var usersDb = new CouchDB("test_suite_users", {"X-Couch-Full-Commit":"false"});
   usersDb.deleteDb();
-  usersDb.createDb();
 
   run_on_modified_server(
     [

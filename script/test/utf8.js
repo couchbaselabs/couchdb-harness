@@ -23,6 +23,7 @@ couchTests.utf8 = function(debug) {
   texts[2] = "3. Math: ∮ E⋅da = Q,  n → ∞, ∑ f(i) = ∏ g(i),"
   texts[3] = "4. Geek: STARGΛ̊TE SG-1"
   texts[4] = "5. Braille: ⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌"
+  texts[5] = "6. null \u0000 byte" 
 
   // check that we can save a reload with full fidelity
   for (var i=0; i<texts.length; i++) {
@@ -30,12 +31,12 @@ couchTests.utf8 = function(debug) {
   }
 
   for (var i=0; i<texts.length; i++) {
-    TEquals(texts[i], db.open(i.toString()).text)
+    T(db.open(i.toString()).text == texts[i]);
   }
 
   // check that views and key collation don't blow up
   var rows = db.query(function(doc) { emit(null, doc.text) }).rows;
   for (var i=0; i<texts.length; i++) {
-    TEquals(texts[i], rows[i].value)
+    T(rows[i].value == texts[i]);
   }
 };

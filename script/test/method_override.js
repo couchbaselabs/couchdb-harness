@@ -13,7 +13,7 @@
 // Allow broken HTTP clients to fake a full method vocabulary with an X-HTTP-METHOD-OVERRIDE header
 couchTests.method_override = function(debug) {
   var result = JSON.parse(CouchDB.request("GET", "/").responseText);
-  TEquals("Welcome", result.couchdb)
+  T(result.couchdb == "Welcome");
 
   var db = new CouchDB("test_suite_db", {"X-Couch-Full-Commit":"false"});
   db.deleteDb();
@@ -22,19 +22,19 @@ couchTests.method_override = function(debug) {
 
   var doc = {bob : "connie"};
   xhr = CouchDB.request("POST", "/test_suite_db/fnord", {body: JSON.stringify(doc), headers:{"X-HTTP-Method-Override" : "PUT"}});
-  TEquals(201, xhr.status)
+  T(xhr.status == 201);
 
   doc = db.open("fnord");
-  TEquals("connie", doc.bob)
+  T(doc.bob == "connie");
 
   xhr = CouchDB.request("POST", "/test_suite_db/fnord?rev=" + doc._rev, {headers:{"X-HTTP-Method-Override" : "DELETE"}});
-  TEquals(200, xhr.status)
+  T(xhr.status == 200);
 
   xhr = CouchDB.request("GET", "/test_suite_db/fnord2", {body: JSON.stringify(doc), headers:{"X-HTTP-Method-Override" : "PUT"}});
   // Method Override is ignored when original Method isn't POST
-  TEquals(404, xhr.status)
+  T(xhr.status == 404);
 
   doc = db.open("fnord");
-  TIsnull(doc)  
+  T(doc == null);  
 
 };
